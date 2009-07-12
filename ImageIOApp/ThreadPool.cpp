@@ -14,7 +14,7 @@ public:
 	void SetSlot(unsigned char slotNo, ThreadPool::JobFuncPtr func, void* param);
 	void ExecJob(unsigned char slotNo);
 	void ExecJobs();
-	void WaitJobs(int timeOutMilliseconds);
+	bool WaitJobs(int timeOutMilliseconds);
 
 private:
 	bool bStarted_;
@@ -80,19 +80,22 @@ unsigned int ThreadPoolImpl::ThreadProcCaller(void* param)
 
 void ThreadPoolImpl::ThreadProc(unsigned char slotId)
 {
+	HANDLE hEndEvent = hEndEvents_[slotId];
+	HANDLE hBeginEvent = hBeginEvents_[slotId];
+	HANDLE hWaitEvents[2];
+	hWaitEvents[0] = hShutdownEvent_;
+	hWaitEvents[1] = hBeginEvent;
 	while (1) {
-		HANDLE hWaitEvents[2];
-		hWaitEvents[0] = hShutdownEvent_;
-		hWaitEvents[1] = hBeginEvents_[slotId];
 		DWORD ret = WaitForMultipleObjects(2, hWaitEvents, FALSE, INFINITE);
+		ResetEvent(hBeginEvent);
 		switch (ret - WAIT_OBJECT_0) {
 		case 0:
 			return;
 		case 1:
-			assert(jobFuncPtrs_[slotId]);
-			jobFuncPtrs_[slotId](slotId, jobFuncParams_[slotId]);
-			SetEvent(hEndEvents_[slotId]);
-			ResetEvent(hBeginEvents_[slotId]);
+			ThreadPool::JobFuncPtr jobFunc = jobFuncPtrs_[slotId];
+			assert(jobFunc);
+			jobFunc(slotId, jobFuncParams_[slotId]);
+			SetEvent(hEndEvent);
 		}
 	}
 }
@@ -134,9 +137,9 @@ void ThreadPoolImpl::ExecJobs()
 	}
 }
 
-void ThreadPoolImpl::WaitJobs(int timeOutMilliseconds)
+bool ThreadPoolImpl::WaitJobs(int timeOutMilliseconds)
 {
-	WaitForMultipleObjects(nThreads_, hEndEvents_, TRUE, INFINITE);
+	return WAIT_TIMEOUT != WaitForMultipleObjects(nThreads_, hEndEvents_, TRUE, timeOutMilliseconds);
 }
 
 ThreadPool::ThreadPool()
@@ -175,8 +178,8 @@ void ThreadPool::ExecJobs()
 	pImpl_->ExecJobs();
 }
 
-void ThreadPool::WaitJobs(int timeOutMilliseconds)
+bool ThreadPool::WaitJobs(int timeOutMilliseconds)
 {
-	pImpl_->WaitJobs(timeOutMilliseconds);
+	return pImpl_->WaitJobs(timeOutMilliseconds);
 }
 

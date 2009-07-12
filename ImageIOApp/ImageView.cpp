@@ -403,7 +403,10 @@ bool CImageView::render(CSize sz)
 						m_pThreadPool->SetSlot(i, Caller<gl::intrinsics_sse2_inout4b::AveragingReducerCaller>::StaticCall, &caller);
 					}
 					m_pThreadPool->ExecJobs();
-					m_pThreadPool->WaitJobs();
+					bool ret = m_pThreadPool->WaitJobs(1000);
+					if (!ret) {
+						DebugBreak();
+					}
 				}
 			}
 			break;

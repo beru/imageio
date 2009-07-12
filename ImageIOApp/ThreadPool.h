@@ -13,7 +13,7 @@ public:
 	void SetSlot(unsigned char slotNo, JobFuncPtr func, void* param);
 	void ExecJob(unsigned char slotNo);
 	void ExecJobs();
-	void WaitJobs(int timeOutMilliseconds = -1);
+	bool WaitJobs(int timeOutMilliseconds = -1);
 	
 private:
 	class ThreadPoolImpl* pImpl_;
