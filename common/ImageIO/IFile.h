@@ -1,20 +1,20 @@
-#pragma once
+﻿#pragma once
 
 #include <windows.h>
 
 /*!
 
-�T�v
-	�摜�̓��o�͗p�ɉ��z�I��File��������悤�ɂ���
+概要
+	画像の入出力用に仮想的にFileを扱えるようにする
 	
-����
-	�񓯊�����ɂ͑Ή����Ȃ�
-	2GB�܂�
+制限
+	非同期操作には対応しない
+	2GBまで
 	
-���l
-	CxImage by Davide Pizzolato (http://www.xdp.it/cximage.htm)	���Q�l�ɂ��܂����B
+備考
+	CxImage by Davide Pizzolato (http://www.xdp.it/cximage.htm)	を参考にしました。
 
-	Interface��WindowsAPI��File�֐��Ɏ����Ă��܂�
+	InterfaceをWindowsAPIのFile関数に似せています
 
 */
 

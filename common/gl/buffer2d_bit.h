@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 
 #include "buffer2D.h"
 #include <boost/cstdint.hpp>
@@ -6,25 +6,25 @@
 namespace gl
 {
 
-// ˆ—Œn‚Ìint‚Ì’PˆÊ‚Å“Ç‚İ‘‚«‚·‚é‚æ‚¤‚É
+// å‡¦ç†ç³»ã®intã®å˜ä½ã§èª­ã¿æ›¸ãã™ã‚‹ã‚ˆã†ã«
 template <>
 class Buffer2D<bool> : public IBuffer2D
 {
 public:
 	typedef boost::uint_fast32_t value_type;
 private:
-	size_t width_;			//!< •`‰æ—Ìˆæ‚Ì‰¡•
-	size_t height_;			//!< •`‰æ—Ìˆæ‚Ìc•
-	int lineOffset_;		//!< YÀ•W‚ğ1‚Âã‚°‚é‚Ì‚É•K—v‚ÈƒoƒCƒg”B
+	size_t width_;			//!< æç”»é ˜åŸŸã®æ¨ªå¹…
+	size_t height_;			//!< æç”»é ˜åŸŸã®ç¸¦å¹…
+	int lineOffset_;		//!< Yåº§æ¨™ã‚’1ã¤ä¸Šã’ã‚‹ã®ã«å¿…è¦ãªãƒã‚¤ãƒˆæ•°ã€‚
 
-	value_type* pBuff_;			//!< •`‰æ—Ìˆæ‚Ìæ“ªÀ•W‚ğw‚·
+	value_type* pBuff_;			//!< æç”»é ˜åŸŸã®å…ˆé ­åº§æ¨™ã‚’æŒ‡ã™
 	
-	bool allocated_;	//!< ‚±‚Ìinstance‚ªbuff_‚ğŠm•Û‚µ‚½‚Ì‚©‚Ç‚¤‚©
+	bool allocated_;	//!< ã“ã®instanceãŒbuff_ã‚’ç¢ºä¿ã—ãŸã®ã‹ã©ã†ã‹
 
 	static const size_t VALUE_BITS = sizeof(value_type) * 8;
 	static const size_t VALUE_BYTES = sizeof(value_type);
 	
-	// w’è‚µ‚½À•W‚Ì‰æ‘f‚ªAæ“ª‚©‚ç‰½ƒoƒCƒg–Ú‚É‘¶İ‚·‚é‚©
+	// æŒ‡å®šã—ãŸåº§æ¨™ã®ç”»ç´ ãŒã€å…ˆé ­ã‹ã‚‰ä½•ãƒã‚¤ãƒˆç›®ã«å­˜åœ¨ã™ã‚‹ã‹
 	__forceinline size_t buffPos(size_t x, size_t y) const
 	{
 		assert(x+1 <= width_);
@@ -54,7 +54,7 @@ public:
 		allocated_	= true;
 	}
 	
-	//! “à•”‚Å•`‰æ—Ìˆæ‚ğŠm•Û‚µ‚È‚¢‚ÅAŠO‚©‚ç“n‚Á‚Ä‚«‚½À•W‚ğ—˜—p
+	//! å†…éƒ¨ã§æç”»é ˜åŸŸã‚’ç¢ºä¿ã—ãªã„ã§ã€å¤–ã‹ã‚‰æ¸¡ã£ã¦ããŸåº§æ¨™ã‚’åˆ©ç”¨
 	Buffer2D(size_t width, int height, int lineOffset, void* pBuff)
 	{
 		width_		= width;

@@ -1,16 +1,16 @@
-#pragma once
+ï»¿#pragma once
 
 #include <emmintrin.h>
 #include <boost/cstdint.hpp>
 using namespace boost;
 
 /*
-	–ÊÏ•½‹Ï–@i•½‹Ï‰æ‘f–@j‚É‚æ‚é‰æ‘œk¬ˆ—
+	é¢ç©å¹³å‡æ³•ï¼ˆå¹³å‡ç”»ç´ æ³•ï¼‰ã«ã‚ˆã‚‹ç”»åƒç¸®å°å‡¦ç†
 	
-	SSE2 ‚Ü‚Å‚Ì intrinsics ‚ğg—p‚µ‚ÄÅ“K‰»
+	SSE2 ã¾ã§ã® intrinsics ã‚’ä½¿ç”¨ã—ã¦æœ€é©åŒ–
 
-	“ü—ÍF32bitAŠeF—v‘f8bitA4—v‘f“Z‚ß‚½F‚Ìˆ—
-	o—ÍF32bitAŠeF—v‘f8bitA4—v‘f“Z‚ß‚½F‚Ìˆ—
+	å…¥åŠ›ï¼š32bitã€å„è‰²è¦ç´ 8bitã€4è¦ç´ çºã‚ãŸè‰²ã®å‡¦ç†
+	å‡ºåŠ›ï¼š32bitã€å„è‰²è¦ç´ 8bitã€4è¦ç´ çºã‚ãŸè‰²ã®å‡¦ç†
 */
 
 namespace gl

@@ -1,10 +1,10 @@
-#pragma once
+ï»¿#pragma once
 
 /*
-	ŒÅ’è¬”“_Œ^
+	å›ºå®šå°æ•°ç‚¹å‹
 	
 	http://shinh.skr.jp/template/gamenum.html
-	‚ğQl‚ÉÀ‘•B
+	ã‚’å‚è€ƒã«å®Ÿè£…ã€‚
 	
 */
 
@@ -232,7 +232,7 @@ inline void swap(fixed<shifts, T>& lhs, fixed<shifts, T>& rhs)
 }
 */
 
-//! â‘Î’l
+//! çµ¶å¯¾å€¤
 template<int shifts, typename T>
 inline fixed<shifts, T> pow(fixed<shifts, T> v1, fixed<shifts, T> v2)
 {
@@ -240,7 +240,7 @@ inline fixed<shifts, T> pow(fixed<shifts, T> v1, fixed<shifts, T> v2)
 	return fixed<shifts, T>(val);
 }
 
-//! â‘Î’l
+//! çµ¶å¯¾å€¤
 template<int shifts, typename T>
 inline fixed<shifts, T> abs(fixed<shifts, T> p)
 {
@@ -259,7 +259,7 @@ inline fixed<shifts, __int64> abs(fixed<shifts, __int64> p)
 	return p;
 }
 
-// ­”•”æ‚èo‚µ
+// å°‘æ•°éƒ¨å–ã‚Šå‡ºã—
 template<int shifts, typename T>
 inline fixed<shifts, T> frac(fixed<shifts, T> p)
 {
@@ -267,7 +267,7 @@ inline fixed<shifts, T> frac(fixed<shifts, T> p)
 	return p;
 }
 
-// ¬”•”AlÌŒÜ“ü‚µ‚Ä®”‰»
+// å°æ•°éƒ¨ã€å››æ¨äº”å…¥ã—ã¦æ•´æ•°åŒ–
 template<int shifts, typename T>
 static fixed<shifts, T> halfAdjust(fixed<shifts, T> p)
 {
@@ -282,7 +282,7 @@ inline fixed<shifts, T> floor(fixed<shifts, T> p)
 	return p;
 }
 
-// ØÌ‚Ä®”‰»
+// åˆ‡æ¨ã¦æ•´æ•°åŒ–
 template<int shifts, typename T>
 __forceinline int ToInt(fixed<shifts, T> p)
 {

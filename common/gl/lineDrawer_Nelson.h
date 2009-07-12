@@ -1,14 +1,14 @@
-#pragma once
+ï»¿#pragma once
 
 /*
 
-Scott R. Nelson ‚ª”­•\‚µ‚½ Unweighted Area Sampling Weighted Area Sampling Gupta-Sproull Antialiased Lines
+Scott R. Nelson ãŒç™ºè¡¨ã—ãŸ Unweighted Area Sampling Weighted Area Sampling Gupta-Sproull Antialiased Lines
 
 http://www.acm.org/jgt/papers/Nelson96/
 http://www.acm.org/jgt/papers/Nelson97/
 http://www.acm.org/jgt/papers/Nelson96/linequality/lqtest.html
 
-ŒöŠJ‚³‚ê‚Ä‚¢‚½ƒR[ƒh‚ğQl‚ÉC++‚ÅÀ‘•B
+å…¬é–‹ã•ã‚Œã¦ã„ãŸã‚³ãƒ¼ãƒ‰ã‚’å‚è€ƒã«C++ã§å®Ÿè£…ã€‚
 */
 
 #include <math.h>
@@ -60,7 +60,7 @@ private:
 	
 	NumericT getEndPointCorrectValue(const NumericT ep_table[9], const int scount, const int ecount)
 	{
-		// OpenCV‚Ì‚â‚è•û‚Ì‚ª‚‘¬
+		// OpenCVã®ã‚„ã‚Šæ–¹ã®ãŒé«˜é€Ÿ
 		const size_t idx = (((scount >= 2) + 1) & (scount | 2)) * 3 +
 					(((ecount >= 2) + 1) & (ecount | 2));
 		return ep_table[idx];

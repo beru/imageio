@@ -1,8 +1,8 @@
-#pragma once
+ï»¿#pragma once
 
 /*!
 	
-	‹éŒ`
+	çŸ©å½¢
 	Rectangle
 */
 
@@ -76,7 +76,7 @@ public:
 		return contains(pt.x, pt.y);
 	}
 	
-	//! ˆø”‚Ì‹éŒ`‚ğ“à•ï‚·‚é‚©‚Ç‚¤‚©
+	//! å¼•æ•°ã®çŸ©å½¢ã‚’å†…åŒ…ã™ã‚‹ã‹ã©ã†ã‹
 	bool Contains(const Rect& rect) const {
 		return
 			x <= rect.x

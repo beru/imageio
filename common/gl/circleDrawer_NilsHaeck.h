@@ -1,11 +1,11 @@
-#pragma once
+ï»¿#pragma once
 
 /*
-	‰~•`‰æˆ—
+	å††æç”»å‡¦ç†
 
 	http://www.simdesign.nl/tips/tip002.html
 	
-	‚É‘‚©‚ê‚Ä‚¢‚éˆ—‚ğC++‚ÅÀ‘•B
+	ã«æ›¸ã‹ã‚Œã¦ã„ã‚‹å‡¦ç†ã‚’C++ã§å®Ÿè£…ã€‚
 
 */
 
@@ -103,12 +103,12 @@ public:
 			NumericT sqrYLen = sqr(yLen);
 			NumericT sqrXLen = max(0, rpf2 - sqrYLen);
 			NumericT xLen = sqrt(sqrXLen);
-			// ŠO‘¤‚Ì‹ó”’‚ğskip
+			// å¤–å´ã®ç©ºç™½ã‚’skip
 			NumericT lx_OuterCircle = max(lx, cx - xLen);
 			NumericT rx_OuterCircle = min(rx, cx + xLen);
 			NumericT x = lx + ceil(lx_OuterCircle - lx);
 			ColorT* pptr = lptr + ToInt(x);
-			// feather‚Ì‰e‹¿‚ª‹y‚Î‚È‚¢“à‘¤‚Ì‰~‚Ì‹——£‚ğ‹‚ß‚é
+			// featherã®å½±éŸ¿ãŒåŠã°ãªã„å†…å´ã®å††ã®è·é›¢ã‚’æ±‚ã‚ã‚‹
 			NumericT xLen_InnerCircle = sqrt(rmf2 - min(rmf2, sqrYLen));
 			NumericT lx_InnerCircle = max(lx, cx - xLen_InnerCircle);
 			NumericT rx_InnerCircle = min(rx, cx + xLen_InnerCircle);
@@ -154,8 +154,8 @@ public:
 	}
 	
 	/*
-		sqrt ‚Íˆ—‚ÉŠÔ‚ªŠ|‚©‚è‚·‚¬‚éB‚»‚±‚ÅA
-		’†S‚©‚ç‚ÌX‹——£‚ÆY‹——£‚Ì“ñæ‚Ì˜a‚ğA0.0‚©‚ç1.0‚Ì’†S‚©‚ç‚Ì‹——£‚Ì’l‚É•ÏŠ·‚µ—˜—p‚·‚éB
+		sqrt ã¯å‡¦ç†ã«æ™‚é–“ãŒæ›ã‹ã‚Šã™ãã‚‹ã€‚ãã“ã§ã€
+		ä¸­å¿ƒã‹ã‚‰ã®Xè·é›¢ã¨Yè·é›¢ã®äºŒä¹—ã®å’Œã‚’ã€0.0ã‹ã‚‰1.0ã®ä¸­å¿ƒã‹ã‚‰ã®è·é›¢ã®å€¤ã«å¤‰æ›ã—åˆ©ç”¨ã™ã‚‹ã€‚
 
 	*/
 	template <typename NumericT, size_t SIZE>
@@ -186,7 +186,7 @@ public:
 			NumericT sqrYLen = sqr(yLen);
 			NumericT sqrXLen = max(0, sqrRadius - sqrYLen);
 			NumericT maxXLen = sqrt(sqrXLen);
-			// ŠO‘¤‚Ì‹ó”’‚ğskip
+			// å¤–å´ã®ç©ºç™½ã‚’skip
 			NumericT lx_OuterCircle = max(lx, cx - maxXLen);
 			NumericT rx_OuterCircle = min(rx, cx + maxXLen);
 			NumericT x = lx + ceil(lx_OuterCircle - lx);

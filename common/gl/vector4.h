@@ -1,7 +1,7 @@
-#pragma once
+ï»¿#pragma once
 
 /*!
-	ŽlŒ³ƒxƒNƒgƒ‹
+	å››å…ƒãƒ™ã‚¯ãƒˆãƒ«
 */
 
 namespace gl {

@@ -1,4 +1,4 @@
-#include "ImageReader.h"
+ï»¿#include "ImageReader.h"
 
 #define XMD_H
 #undef FAR
@@ -61,26 +61,26 @@ bool ImageReader::ReadJPEG(IFile& file)
 {
 	imageFormatType_ = ImageFormatType_JPEG;
 
-	jpeg_decompress_struct jdJpeg;	  // ƒfƒR[ƒh—p\‘¢‘Ì
+	jpeg_decompress_struct jdJpeg;	  // ãƒ‡ã‚³ãƒ¼ãƒ‰ç”¨æ§‹é€ ä½“
 	jdJpeg.do_fancy_upsampling = 0;
 	
-	JSAMPROW jsrWork;				  // ì‹Æ—pJSAMPROW
+	JSAMPROW jsrWork;				  // ä½œæ¥­ç”¨JSAMPROW
 	
-	jpeg_error_mgr jemError;		  // JPEGƒGƒ‰[ƒ}ƒl[ƒWƒƒ
+	jpeg_error_mgr jemError;		  // JPEGã‚¨ãƒ©ãƒ¼ãƒãƒãƒ¼ã‚¸ãƒ£
 	jdJpeg.err = jpeg_std_error(&jemError);
 	jemError.error_exit = JpegErrorHandler;
 	jdJpeg.client_data = this;
 	
 	
-	// ƒfƒR[ƒh€”õ
+	// ãƒ‡ã‚³ãƒ¼ãƒ‰æº–å‚™
 	jpeg_create_decompress(&jdJpeg);
 	jdJpeg.dct_method = JDCT_IFAST;
 
-	// ƒ\[ƒX‚ğİ’è
+	// ã‚½ãƒ¼ã‚¹ã‚’è¨­å®š
 	JPEGManager<8192> jpegManager(&file);
 	jdJpeg.src = &jpegManager;
 	
-	// ƒwƒbƒ_“Ç‚İ‚İ
+	// ãƒ˜ãƒƒãƒ€èª­ã¿è¾¼ã¿
 	jpeg_read_header(&jdJpeg, TRUE);
 	
 	if (!ReadSourceInformation(jdJpeg)) {
@@ -90,7 +90,7 @@ bool ImageReader::ReadJPEG(IFile& file)
 		return false;
 	}
 	
-	// ƒfƒR[ƒhŠJn
+	// ãƒ‡ã‚³ãƒ¼ãƒ‰é–‹å§‹
 	jpeg_start_decompress(&jdJpeg);
 	
 	bool bRet = true;

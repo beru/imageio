@@ -1,7 +1,7 @@
-#pragma once
+ï»¿#pragma once
 
 /*
-	F‚Ìî•ñ‚ðƒJƒvƒZƒ‹‰»B
+	è‰²ã®æƒ…å ±ã‚’ã‚«ãƒ—ã‚»ãƒ«åŒ–ã€‚
 
 */
 

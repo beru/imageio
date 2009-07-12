@@ -1,8 +1,8 @@
-#pragma once
+ï»¿#pragma once
 
 /*
 
-lŒ³³•ûs—ñ
+å››å…ƒæ­£æ–¹è¡Œåˆ—
 
 http://www12.plala.or.jp/ksp/formula/mathFormula/html/node79.html
 
@@ -192,7 +192,7 @@ Vector4<T> operator * (const Matrix4<T>& m, const Vector4<T>& v)
 		);
 }
 
-// X²’†S‰ñ“]
+// Xè»¸ä¸­å¿ƒå›è»¢
 // 1    0    0    0
 // 0    cos  -sin 0
 // 0    sin  cos  0
@@ -211,7 +211,7 @@ Matrix4<T>& Matrix4<T>::RotationX(Matrix4<T>& m, T2 angle)
 	return m;
 }
 
-// Y²’†S‰ñ“]
+// Yè»¸ä¸­å¿ƒå›è»¢
 // cos  0  sin 0
 // 0    1  0   0
 // -sin 0  cos 0
@@ -230,7 +230,7 @@ Matrix4<T>& Matrix4<T>::RotationY(Matrix4<T>& m, T2 angle)
 	return m;
 }
 
-// Z²’†S‰ñ“]
+// Zè»¸ä¸­å¿ƒå›è»¢
 // cos -sin 0 0
 // sin cos  0 0
 // 0   0    1 0
@@ -249,7 +249,7 @@ Matrix4<T>& Matrix4<T>::RotationZ(Matrix4<T>& m, T2 angle)
 	return m;
 }
 
-// Šg‘åk¬s—ñ
+// æ‹¡å¤§ç¸®å°è¡Œåˆ—
 // a 0 0 0
 // 0 b 0 0
 // 0 0 c 0
@@ -265,7 +265,7 @@ Matrix4<T>& Matrix4<T>::Scaling(Matrix4<T>& m, T2 sx, T2 sy, T2 sz)
 	return m;
 }
 
-// •½sˆÚ“®s—ñ
+// å¹³è¡Œç§»å‹•è¡Œåˆ—
 // 1 0 0 x
 // 0 1 0 y
 // 0 0 1 z

@@ -1,7 +1,7 @@
-#pragma once
+ï»¿#pragma once
 
 /*
-	Digital Differential Analyzer‚É‚æ‚éü•ª•`‰æˆ—
+	Digital Differential Analyzerã«ã‚ˆã‚‹ç·šåˆ†æç”»å‡¦ç†
 */
 
 #include <math.h>
@@ -19,7 +19,7 @@ template <typename NumericT, typename ColorT, typename ColorBlenderT>
 class LineDrawer_DDA : public IBufferLineDrawer<NumericT, ColorT>
 {
 protected:
-	Buffer2D<ColorT>*	pBuff_;		//!< •`‰ææ
+	Buffer2D<ColorT>*	pBuff_;		//!< æç”»å…ˆ
 	
 	__forceinline
 	void drawLine(ColorT color, NumericT width, NumericT height, NumericT x1, NumericT y1, NumericT x2, NumericT y2)

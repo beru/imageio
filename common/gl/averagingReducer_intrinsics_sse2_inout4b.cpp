@@ -1,4 +1,4 @@
-#include "AveragingReducer_intrinsics_sse2_inout4b.h"
+ï»¿#include "AveragingReducer_intrinsics_sse2_inout4b.h"
 
 #include "AveragingReducer_intrinsics.h"
 
@@ -170,7 +170,7 @@ public:
 	}
 };
 
-// ‰¡2‰ÁZ 8bits -> 16bits
+// æ¨ª2åŠ ç®— 8bits -> 16bits
 // in	128bits * 1
 // out	128bits * 1
 __forceinline __m128i Scale2(const __m128i* pSrc)
@@ -179,9 +179,9 @@ __forceinline __m128i Scale2(const __m128i* pSrc)
 
 /*
 	12345678abcdefgh
-	«
+	â†“
 	1234abcd5678efgh
-	«
+	â†“
 	 1 2 3 4 a b c d
 	        +
 	 5 6 7 8 e f g h
@@ -194,7 +194,7 @@ __forceinline __m128i Scale2(const __m128i* pSrc)
 	return result0;
 }
 
-// ‰¡3‰ÁZ 8bits -> 16bits
+// æ¨ª3åŠ ç®— 8bits -> 16bits
 // in	128bits * 3
 // out	128bits * 2
 __forceinline void Scale3(const __m128i* pSrc, __m128i& result0, __m128i& result1)
@@ -202,14 +202,14 @@ __forceinline void Scale3(const __m128i* pSrc, __m128i& result0, __m128i& result
 	// 3, 1 + 2, 2 + 1, 3
 /*
 	"12345678abcdefgh
-	«
+	â†“
 	"5678abcd1234efgh
 	'12345678abcdefgh
-	«
+	â†“
 	" 1 2 3 4 e f g h
 	" 5 6 7 8 a b c d
 	' 1 2 3 4 5 6 7 8
-	«
+	â†“
 	1 2 3 4 e f g h
 	5 6 7 8 1 2 3 4
 	a b c d 5 6 7 8
@@ -247,18 +247,18 @@ __forceinline void Scale3(const __m128i* pSrc, __m128i& result0, __m128i& result
 	result1 = _mm_add_epi16(_mm_add_epi16(right00, right01), right02);
 }
 
-// ‰¡4‰ÁZ 8bits -> 16bits
+// æ¨ª4åŠ ç®— 8bits -> 16bits
 // in	128bits * 2
 // out	128bits * 1
 __forceinline __m128i Scale4(const __m128i* pSrc)
 {
 /*
 	12345678abcdefgh
-	«
+	â†“
 	 1 2 3 4 5 6 7 8
 	        +
 	 9 a b c d e f g
-	«
+	â†“
 	 1 2 3 4 5 6 7 8
 
 	"1234 '1234 
@@ -286,10 +286,10 @@ __forceinline __m128i Scale4(const __m128i* pSrc)
 	return result;
 }
 
-// [1, ‰¡3‰ÁZ]
+// [1, æ¨ª3åŠ ç®—]
 /*
 123456789abcdefg
-«
+â†“
  1 2 3 4 5 6 7 8
         +
  0 0 0 0 9 a b c
@@ -315,12 +315,12 @@ __forceinline __m128i Split_1_3(__m128i src)
 	return result;
 }
 
-// [‰¡2‰ÁZ]
+// [æ¨ª2åŠ ç®—]
 /*
 12345678********
-«
+â†“
  1 2 3 4 5 6 7 8
-        {
+        ï¼‹
  5 6 7 8 * * * *
 */
 __forceinline __m128i Split_2_0(__m128i src)
@@ -332,12 +332,12 @@ __forceinline __m128i Split_2_0(__m128i src)
 	return result;
 }
 
-// [‰¡2‰ÁZ, 1]
+// [æ¨ª2åŠ ç®—, 1]
 /*
 123456789abcdefg
-«
+â†“
 12349abc5678defg
-«
+â†“
  1 2 3 4 9 a b c
         +
  5 6 7 8 d e f g
@@ -353,12 +353,12 @@ __forceinline __m128i Split_2_1(__m128i src)
 	return result;
 }
 
-// [‰¡2‰ÁZ, ‰¡2‰ÁZ]
+// [æ¨ª2åŠ ç®—, æ¨ª2åŠ ç®—]
 /*
 123456789abcdefg
-«
+â†“
 12349abc5678defg
-«
+â†“
  1 2 3 4 9 a b c
         +
  5 6 7 8 d e f g
@@ -373,10 +373,10 @@ __forceinline __m128i Split_2_2(__m128i src)
 	return result;
 }
 
-// [‰¡3‰ÁZ, 1]
+// [æ¨ª3åŠ ç®—, 1]
 /*
 123456789abcdefg
-«
+â†“
  1 2 3 4 d e f g
         +
  5 6 7 8 0 0 0 0
@@ -402,10 +402,10 @@ __forceinline __m128i Split_3_1(__m128i src)
 	return result;
 }
 
-// [‰¡4‰ÁZ, 0]
+// [æ¨ª4åŠ ç®—, 0]
 /*
 123456789abcdefg
-«
+â†“
  1 2 3 4 0 0 0 0
         +
  5 6 7 8 0 0 0 0
@@ -418,7 +418,7 @@ __forceinline __m128i Collect_4(__m128i src)
 {
 /*
 123456789abcdefg
-«
+â†“
  1 2 3 4 5 6 7 8
         +
  9 a b c d e f g
@@ -432,7 +432,7 @@ __forceinline __m128i Collect_4(__m128i src)
 	return result;
 }
 
-// 8bit * 4 ‚ğWŒvA16bit * 4 ‚Å•Ô‚·
+// 8bit * 4 ã‚’é›†è¨ˆã€16bit * 4 ã§è¿”ã™
 __forceinline __m128i CollectSum_1(const __m128i* pSrc)
 {
 	__m128i ret = _mm_loadl_epi64(pSrc);
@@ -1008,7 +1008,7 @@ public:
 	}
 };
 
-// ‰¡ 1 : N ”ä‚Ìk¬”ä—¦“Á‰»”Å
+// æ¨ª 1 : N æ¯”ã®ç¸®å°æ¯”ç‡ç‰¹åŒ–ç‰ˆ
 class LineAveragingReducer_Ratio1NX : public ILineAveragingReducer
 {
 public:
@@ -1018,7 +1018,7 @@ public:
 	ILineAveragingReducer_Impl;
 	
 	/*
-	”{—¦‚Ì•ª‚¾‚¯ƒf[ƒ^‚ğ•K—v‚Æ‚·‚é
+	å€ç‡ã®åˆ†ã ã‘ãƒ‡ãƒ¼ã‚¿ã‚’å¿…è¦ã¨ã™ã‚‹
 	
 	2 = 2,2
 	3 = 3,1+2, 2+1,3
@@ -1493,7 +1493,7 @@ void AveragingReducer::Setup(const AveragingReduceParams* pParams, uint16_t part
 	}
 }
 
-// c 1:N
+// ç¸¦ 1:N
 void AveragingReducer::Process_Ratio1NX(ILineAveragingReducer& lineReducer, uint16_t part)
 {
 	const AveragingReduceParams& params = *pParams;
@@ -1517,10 +1517,10 @@ void AveragingReducer::Process_Ratio1NX(ILineAveragingReducer& lineReducer, uint
 	tmpBuff += xLoopCount * 2 * part;
 	
 	for (uint16_t y=yStart; y<yEnd; ++y) {
-		// Å‰‚Ìƒ‰ƒCƒ“ set to temp
+		// æœ€åˆã®ãƒ©ã‚¤ãƒ³ set to temp
 		lineReducer.fillRead(srcLine, tmpBuff);
 		OffsetPtr(srcLine, params.srcLineOffsetBytes);
-		// Ÿ‚Ìƒ‰ƒCƒ“‚©‚çÅŒã‚Ì‘O‚Ìƒ‰ƒCƒ“‚Ü‚Å plusEqual to temp
+		// æ¬¡ã®ãƒ©ã‚¤ãƒ³ã‹ã‚‰æœ€å¾Œã®å‰ã®ãƒ©ã‚¤ãƒ³ã¾ã§ plusEqual to temp
 		for (uint16_t i=0; i<params.heightRatioSource-1u; ++i) {
 			lineReducer.addRead(srcLine, tmpBuff);
 			OffsetPtr(srcLine, params.srcLineOffsetBytes);
@@ -1539,9 +1539,9 @@ void AveragingReducer::Process_Ratio1NX(ILineAveragingReducer& lineReducer, uint
 	const uint16_t remain = params.srcHeight % params.heightRatioSource;
 }
 
-// c ©—R”ä—¦k¬
-// thread‰»‚·‚é‚Æ‚µ‚½‚çAbody‚ÌtargetRatio‚Ìloop‚ğ•ªŠ„‚©BB
-// targetRatio‚ª2‚Ìê‡‚É“à‘¤‚Ìbody‚Ìƒ‹[ƒv‚ª‘¶İ‚µ‚È‚¢‚Ì‚Å•ªŠ„o—ˆ‚È‚¢B‚»‚Ìê‡‚ÍsrcRatio‚ª¬‚³‚¢ê‡‚ÍŠO‘¤‚Ìƒ‹[ƒv‚ª•ªŠ„o—ˆ‚é‚Ì‚Å–â‘è–³‚¢B‘å‚«‚¢ê‡‚Ík¬”ä—¦©‘Ì‚ª‘å‚«‚¢‚Ì‚Å
+// ç¸¦ è‡ªç”±æ¯”ç‡ç¸®å°
+// threadåŒ–ã™ã‚‹ã¨ã—ãŸã‚‰ã€bodyã®targetRatioã®loopã‚’åˆ†å‰²ã‹ã€‚ã€‚
+// targetRatioãŒ2ã®å ´åˆã«å†…å´ã®bodyã®ãƒ«ãƒ¼ãƒ—ãŒå­˜åœ¨ã—ãªã„ã®ã§åˆ†å‰²å‡ºæ¥ãªã„ã€‚ãã®å ´åˆã¯srcRatioãŒå°ã•ã„å ´åˆã¯å¤–å´ã®ãƒ«ãƒ¼ãƒ—ãŒåˆ†å‰²å‡ºæ¥ã‚‹ã®ã§å•é¡Œç„¡ã„ã€‚å¤§ãã„å ´åˆã¯ç¸®å°æ¯”ç‡è‡ªä½“ãŒå¤§ãã„ã®ã§
 void AveragingReducer::Process_RatioAny(ILineAveragingReducer& lineReducer, uint16_t part)
 {
 	const AveragingReduceParams& params = *pParams;

@@ -1,4 +1,4 @@
-#include "CircleDrawer_intrinsics.h"
+ï»¿#include "CircleDrawer_intrinsics.h"
 
 #include "common.h"
 
@@ -30,7 +30,7 @@ void DrawSphere_A8_intrinsics(
 			float sqrYLen = sqr(yLen);
 			float sqrXLen = max(0, sqr(radius) - sqrYLen);
 			float maxXLen = sqrt(sqrXLen);
-			// ŠO‘¤‚Ì‹ó”’‚ğskip
+			// å¤–å´ã®ç©ºç™½ã‚’skip
 			float lx2 = max(lx, cx - maxXLen);
 			float rx2 = min(rx, cx + maxXLen);
 			size_t ilx2 = (size_t) lx2;

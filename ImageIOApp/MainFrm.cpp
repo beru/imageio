@@ -1,4 +1,4 @@
-#include "StdAfx.h"
+ï»¿#include "StdAfx.h"
 
 #include "resource.h"
 #include ".\mainfrm.h"
@@ -83,7 +83,7 @@ LRESULT CMainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 
 	m_pOpenFileDlg = new CFileDialogEx(
 		TRUE, NULL, NULL, OFN_HIDEREADONLY|OFN_ENABLESIZING,
-		_T("ƒTƒ|[ƒg‚µ‚Ä‚¢‚éƒtƒ@ƒCƒ‹ (*.tif; *.tiff; *.jpg; *.jpeg; *.png; *.bmp)\0*.tif;*.tiff;*.jpg;*.jpeg;*.png;*.bmp\0ƒrƒbƒgƒ}ƒbƒv ƒtƒ@ƒCƒ‹ (*.bmp)\0*.bmp\0JPEGƒtƒ@ƒCƒ‹ (*.jpg; *.jpeg)\0*.jpg;*.jpeg\0TIFFƒtƒ@ƒCƒ‹ (*.tif; *.tiff)\0*.tif;*.tiff\0PNGƒtƒ@ƒCƒ‹ (*.png)\0*.png\0\0"),
+		_T("ã‚µãƒãƒ¼ãƒˆã—ã¦ã„ã‚‹ãƒ•ã‚¡ã‚¤ãƒ« (*.tif; *.tiff; *.jpg; *.jpeg; *.png; *.bmp)\0*.tif;*.tiff;*.jpg;*.jpeg;*.png;*.bmp\0ãƒ“ãƒƒãƒˆãƒãƒƒãƒ— ãƒ•ã‚¡ã‚¤ãƒ« (*.bmp)\0*.bmp\0JPEGãƒ•ã‚¡ã‚¤ãƒ« (*.jpg; *.jpeg)\0*.jpg;*.jpeg\0TIFFãƒ•ã‚¡ã‚¤ãƒ« (*.tif; *.tiff)\0*.tif;*.tiff\0PNGãƒ•ã‚¡ã‚¤ãƒ« (*.png)\0*.png\0\0"),
 		m_hWnd
 	);
 	// create command bar window
@@ -113,7 +113,7 @@ LRESULT CMainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 	m_sBar.SetPaneWidth(ID_PANE_1, 360);
 	m_sBar.SetPaneWidth(ID_PANE_2, 100);
 	
-	// MRUƒtƒ@ƒCƒ‹ƒŠƒXƒg‚ğİ’è
+	// MRUãƒ•ã‚¡ã‚¤ãƒ«ãƒªã‚¹ãƒˆã‚’è¨­å®š
 	CMenuHandle menu = m_CmdBar.GetMenu();
 	CMenuHandle menuFile = menu.GetSubMenu(0);
 	CMenuHandle menuMru = menuFile.GetSubMenu(1);
@@ -200,14 +200,14 @@ LRESULT CMainFrame::OnFileRecent(UINT uNotifyCode, int nID, HWND hWndCtl)
 	if (m_mru.GetFromList(nID, strFile)) {
 		CFindFile find;
 		if (find.FindFile(strFile)) {
-			// ID‚Åw’è‚µ‚½ƒAƒCƒeƒ€‚ğMRUƒtƒ@ƒCƒ‹ƒŠƒXƒg‚Ìæ“ª‚ÉˆÚ“®
+			// IDã§æŒ‡å®šã—ãŸã‚¢ã‚¤ãƒ†ãƒ ã‚’MRUãƒ•ã‚¡ã‚¤ãƒ«ãƒªã‚¹ãƒˆã®å…ˆé ­ã«ç§»å‹•
 			m_mru.MoveToTop(nID);
 			ReadFile(strFile);
 		}else {
-			// ID‚Åw’è‚µ‚½ƒAƒCƒeƒ€‚ğMRUƒtƒ@ƒCƒ‹ƒŠƒXƒg‚©‚çíœ
+			// IDã§æŒ‡å®šã—ãŸã‚¢ã‚¤ãƒ†ãƒ ã‚’MRUãƒ•ã‚¡ã‚¤ãƒ«ãƒªã‚¹ãƒˆã‹ã‚‰å‰Šé™¤
 			m_mru.RemoveFromList(nID);
 		}
-		// MRUƒtƒ@ƒCƒ‹ƒŠƒXƒg‚ğƒŒƒWƒXƒgƒŠ‚É‘‚«‚Ş
+		// MRUãƒ•ã‚¡ã‚¤ãƒ«ãƒªã‚¹ãƒˆã‚’ãƒ¬ã‚¸ã‚¹ãƒˆãƒªã«æ›¸ãè¾¼ã‚€
 		m_mru.WriteToRegistry(MRU_REGISTRY_KEY);
 	}
 	return 0;

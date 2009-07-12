@@ -1,11 +1,11 @@
-#pragma once
+ï»¿#pragma once
 
 #include <bitset>
 #include "arrayutil.h"
 
 namespace gl {
 
-// “ñ’l‰»
+// äºŒå€¤åŒ–
 template <typename SrcColorT, typename BinaryColorT>
 void Binary(const Buffer2D<SrcColorT>& src, Buffer2D<bool>& target, BinaryColorT binaryColor)
 {
@@ -50,9 +50,9 @@ void Binary(const Buffer2D<SrcColorT>& src, Buffer2D<bool>& target, BinaryColorT
 	}
 }
 
-// ƒqƒXƒeƒŠƒVƒX•ÏŠ·‹Èü‚ğ—p‚¢‚½‰Â•Ïè‡’lˆ— “ñ’l‰»
-// VisualC#.NET & Visual Basic.NET‚É‚æ‚éƒfƒBƒWƒ^ƒ‹‰æ‘œˆ—‚ÌŠî‘b‚Æ‰—p -Šî–{ŠT”O‚©‚çŠç‰æ‘œ”F¯‚Ü‚Å- ğˆäKs ’˜
-// VisualBasic & VisualC++‚É‚æ‚éƒfƒBƒWƒ^ƒ‹‰æ‘œˆ—“ü–å- ğˆäKs ’˜
+// ãƒ’ã‚¹ãƒ†ãƒªã‚·ã‚¹å¤‰æ›æ›²ç·šã‚’ç”¨ã„ãŸå¯å¤‰é–¾å€¤å‡¦ç† äºŒå€¤åŒ–
+// VisualC#.NET & Visual Basic.NETã«ã‚ˆã‚‹ãƒ‡ã‚£ã‚¸ã‚¿ãƒ«ç”»åƒå‡¦ç†ã®åŸºç¤ã¨å¿œç”¨ -åŸºæœ¬æ¦‚å¿µã‹ã‚‰é¡”ç”»åƒèªè­˜ã¾ã§- é…’äº•å¹¸å¸‚ è‘—
+// VisualBasic & VisualC++ã«ã‚ˆã‚‹ãƒ‡ã‚£ã‚¸ã‚¿ãƒ«ç”»åƒå‡¦ç†å…¥é–€- é…’äº•å¹¸å¸‚ è‘—
 template <typename NumericT, typename ValueT, typename ValueT2>
 void Binary_DynamicThresholding(
 	const Buffer2D< Color1<ValueT> >& src,

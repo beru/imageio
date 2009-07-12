@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 
 /*
 
@@ -8,7 +8,7 @@ http://freespace.virgin.net/hugo.elias/graphics/x_wuline.htm
 http://en.wikipedia.org/wiki/Xiaolin_Wu%27s_line_algorithm
 
 http://www.cs.nps.navy.mil/people/faculty/capps/iap/class1/lines/lines.html
-‚ğQl‚ÉC++‚ÅÀ‘•B
+ã‚’å‚è€ƒã«C++ã§å®Ÿè£…ã€‚
 
 */
 
@@ -27,7 +27,7 @@ template <typename NumericT, typename ColorT, typename ColorBlenderT>
 class LineDrawer_Wu : public IBufferLineDrawer<NumericT, ColorT>
 {
 protected:
-	Buffer2D<ColorT>*	pBuff_;		//!< •`‰ææ
+	Buffer2D<ColorT>*	pBuff_;		//!< æç”»å…ˆ
 	static const NumericT zero;
 	typedef typename ColorT::value_type ComponentT;
 	
@@ -50,10 +50,10 @@ protected:
 	
 public:
 	
-	// ƒsƒNƒZƒ‹‚Ì’†‰›ˆÊ’u‚ğ‰¼‚É®”À•W‚Æ”F¯‚µ‚Ä‚¢‚éB
+	// ãƒ”ã‚¯ã‚»ãƒ«ã®ä¸­å¤®ä½ç½®ã‚’ä»®ã«æ•´æ•°åº§æ¨™ã¨èªè­˜ã—ã¦ã„ã‚‹ã€‚
 	inline void drawLine(ColorT color, NumericT width, NumericT height, NumericT x1, NumericT y1, NumericT x2, NumericT y2)
 	{
-		NumericT palpha = NumericT(color.a);	// •`‰æF‚Ì“§–¾“x
+		NumericT palpha = NumericT(color.a);	// æç”»è‰²ã®é€æ˜åº¦
 		const int lineOffset = pBuff_->GetLineOffset();
 		if (height < width) {
 			if (x2 < x1) {
@@ -70,12 +70,12 @@ public:
 
 			// Start Point
 			{
-				NumericT xgap = NumericT(1) - frac(x1 + NumericT(0.5));		// ƒsƒNƒZƒ‹‚Ì‰¡è—L—¦
-				NumericT xend = halfAdjust(x1);								// Å‹ß–T‚ÌÀXÀ•W‚ğ‹‚ß‚é
-				NumericT yend = y1 + gradient * (xend - x1);				// ƒsƒNƒZƒ‹‚Ì’†‰›ˆÊ’ui‰¼‘zŠJnˆÊ’uj‚Ü‚ÅX‚ğˆÚ“®‚µ‚½ê‡‚ÌYÀ•W‚ğ‹‚ß‚é
+				NumericT xgap = NumericT(1) - frac(x1 + NumericT(0.5));		// ãƒ”ã‚¯ã‚»ãƒ«ã®æ¨ªå æœ‰ç‡
+				NumericT xend = halfAdjust(x1);								// æœ€è¿‘å‚ã®å®ŸXåº§æ¨™ã‚’æ±‚ã‚ã‚‹
+				NumericT yend = y1 + gradient * (xend - x1);				// ãƒ”ã‚¯ã‚»ãƒ«ã®ä¸­å¤®ä½ç½®ï¼ˆä»®æƒ³é–‹å§‹ä½ç½®ï¼‰ã¾ã§Xã‚’ç§»å‹•ã—ãŸå ´åˆã®Yåº§æ¨™ã‚’æ±‚ã‚ã‚‹
 				ptr = (unsigned char*) pBuff_->GetPixelPtr(xend, ToInt(yend));
 
-				NumericT dist = frac(yend);									// ‰¼‘zƒsƒNƒZƒ‹’†‰›YÀ•W‚©‚ç‚Ì‹——£
+				NumericT dist = frac(yend);									// ä»®æƒ³ãƒ”ã‚¯ã‚»ãƒ«ä¸­å¤®Yåº§æ¨™ã‹ã‚‰ã®è·é›¢
 				ColorT* cptr = (ColorT*)ptr;
 				*cptr = (*pBlender_)(color, palpha * xgap * (NumericT(1) - dist), *cptr);
 				cptr = (ColorT*)(ptr + lineOffset);
@@ -109,11 +109,11 @@ public:
 
 			// End Point
 			{
-				NumericT xgap = frac(x2 + NumericT(0.5));			// ƒsƒNƒZƒ‹‚Ì‰¡è—L—¦
-				NumericT xend = halfAdjust(x2);						// Å‹ß–T‚ÌÀXÀ•W‚ğ‹‚ß‚é
-				NumericT yend = y2 + gradient * (xend - x2);		// ƒsƒNƒZƒ‹‚Ì’†‰›ˆÊ’ui‰¼‘zŠJnˆÊ’uj‚Ü‚ÅX‚ğˆÚ“®‚µ‚½ê‡‚ÌYÀ•W‚ğ‹‚ß‚é
+				NumericT xgap = frac(x2 + NumericT(0.5));			// ãƒ”ã‚¯ã‚»ãƒ«ã®æ¨ªå æœ‰ç‡
+				NumericT xend = halfAdjust(x2);						// æœ€è¿‘å‚ã®å®ŸXåº§æ¨™ã‚’æ±‚ã‚ã‚‹
+				NumericT yend = y2 + gradient * (xend - x2);		// ãƒ”ã‚¯ã‚»ãƒ«ã®ä¸­å¤®ä½ç½®ï¼ˆä»®æƒ³é–‹å§‹ä½ç½®ï¼‰ã¾ã§Xã‚’ç§»å‹•ã—ãŸå ´åˆã®Yåº§æ¨™ã‚’æ±‚ã‚ã‚‹
 
-				NumericT dist = frac(yf);							// ‰¼‘zƒsƒNƒZƒ‹’†‰›YÀ•W‚©‚ç‚Ì‹——£
+				NumericT dist = frac(yf);							// ä»®æƒ³ãƒ”ã‚¯ã‚»ãƒ«ä¸­å¤®Yåº§æ¨™ã‹ã‚‰ã®è·é›¢
 				ColorT* cptr = (ColorT*)ptr;
 				*cptr = (*pBlender_)(color, palpha * xgap * (NumericT(1) - dist), *cptr);
 				cptr = (ColorT*)(ptr + lineOffset);
@@ -136,12 +136,12 @@ public:
 
 			// Start Point
 			{
-				NumericT ygap = NumericT(1) - frac(y1 + NumericT(0.5));		// ƒsƒNƒZƒ‹‚Ìcè—L—¦
-				NumericT yend = halfAdjust(y1);								// Å‹ß–T‚ÌÀYÀ•W‚ğ‹‚ß‚é
-				NumericT xend = x1 + gradient * (yend - y1);				// ƒsƒNƒZƒ‹‚Ì’†‰›ˆÊ’ui‰¼‘zŠJnˆÊ’uj‚Ü‚ÅY‚ğˆÚ“®‚µ‚½ê‡‚ÌXÀ•W‚ğ‹‚ß‚é
+				NumericT ygap = NumericT(1) - frac(y1 + NumericT(0.5));		// ãƒ”ã‚¯ã‚»ãƒ«ã®ç¸¦å æœ‰ç‡
+				NumericT yend = halfAdjust(y1);								// æœ€è¿‘å‚ã®å®ŸYåº§æ¨™ã‚’æ±‚ã‚ã‚‹
+				NumericT xend = x1 + gradient * (yend - y1);				// ãƒ”ã‚¯ã‚»ãƒ«ã®ä¸­å¤®ä½ç½®ï¼ˆä»®æƒ³é–‹å§‹ä½ç½®ï¼‰ã¾ã§Yã‚’ç§»å‹•ã—ãŸå ´åˆã®Xåº§æ¨™ã‚’æ±‚ã‚ã‚‹
 				ptr = (unsigned char*) pBuff_->GetPixelPtr(ToInt(xend), yend);
 
-				NumericT dist = frac(xend);									// ‰¼‘zƒsƒNƒZƒ‹’†‰›XÀ•W‚©‚ç‚Ì‹——£
+				NumericT dist = frac(xend);									// ä»®æƒ³ãƒ”ã‚¯ã‚»ãƒ«ä¸­å¤®Xåº§æ¨™ã‹ã‚‰ã®è·é›¢
 				ColorT* cptr = (ColorT*)ptr;
 				*cptr = (*pBlender_)(color, palpha * ygap * (NumericT(1) - dist), *cptr);
 				++cptr;
@@ -175,11 +175,11 @@ public:
 
 			// End Point
 			{
-				NumericT ygap = frac(y2 + NumericT(0.5));			// ƒsƒNƒZƒ‹‚Ìcè—L—¦
-				NumericT yend = halfAdjust(y2);						// Å‹ß–T‚ÌÀYÀ•W‚ğ‹‚ß‚é
-				NumericT xend = x2 + gradient * (yend - y2);		// ƒsƒNƒZƒ‹‚Ì’†‰›ˆÊ’ui‰¼‘zŠJnˆÊ’uj‚Ü‚ÅY‚ğˆÚ“®‚µ‚½ê‡‚ÌXÀ•W‚ğ‹‚ß‚é
+				NumericT ygap = frac(y2 + NumericT(0.5));			// ãƒ”ã‚¯ã‚»ãƒ«ã®ç¸¦å æœ‰ç‡
+				NumericT yend = halfAdjust(y2);						// æœ€è¿‘å‚ã®å®ŸYåº§æ¨™ã‚’æ±‚ã‚ã‚‹
+				NumericT xend = x2 + gradient * (yend - y2);		// ãƒ”ã‚¯ã‚»ãƒ«ã®ä¸­å¤®ä½ç½®ï¼ˆä»®æƒ³é–‹å§‹ä½ç½®ï¼‰ã¾ã§Yã‚’ç§»å‹•ã—ãŸå ´åˆã®Xåº§æ¨™ã‚’æ±‚ã‚ã‚‹
 
-				NumericT dist = frac(xf);							// ‰¼‘zƒsƒNƒZƒ‹’†‰›XÀ•W‚©‚ç‚Ì‹——£
+				NumericT dist = frac(xf);							// ä»®æƒ³ãƒ”ã‚¯ã‚»ãƒ«ä¸­å¤®Xåº§æ¨™ã‹ã‚‰ã®è·é›¢
 				ColorT* cptr = (ColorT*)ptr;
 				*cptr = (*pBlender_)(color, palpha * ygap * (NumericT(1) - dist), *cptr);
 				++cptr;

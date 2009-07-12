@@ -1,11 +1,11 @@
-#pragma once
+ï»¿#pragma once
 
 #include "common.h"
 
 #include <algorithm>
 
 /*
-	–ÊÏ•½‹Ï–@i•½‹Ï‰æ‘f–@j‚É‚æ‚é‰æ‘œk¬ˆ—
+	é¢ç©å¹³å‡æ³•ï¼ˆå¹³å‡ç”»ç´ æ³•ï¼‰ã«ã‚ˆã‚‹ç”»åƒç¸®å°å‡¦ç†
 */
 
 namespace gl
@@ -329,7 +329,7 @@ public:
 	const size_t numOfFullDots;
 	const size_t imcompleteDotSamples;
 
-	// k¬ƒTƒCƒY‚Í4096ƒsƒNƒZƒ‹ˆÈ‰º‚Å‚È‚¯‚ê‚Î‚¢‚¯‚È‚¢Bê‡‚É‚æ‚è—v’²®B
+	// ç¸®å°ã‚µã‚¤ã‚ºã¯4096ãƒ”ã‚¯ã‚»ãƒ«ä»¥ä¸‹ã§ãªã‘ã‚Œã°ã„ã‘ãªã„ã€‚å ´åˆã«ã‚ˆã‚Šè¦èª¿æ•´ã€‚
 	size_t collectParameters[4096];
 
 	LineAveragingReducer_RatioAny(const size_t ratioTarget, const size_t ratioSource, const size_t srcWidth)
@@ -601,7 +601,7 @@ void StoreToTarget(
 	for (size_t x=0; x<targetWidth; ++x) {
 		// 1. (body * ratioTarget + main) * invertRatioSource
 		// 2. body * (ratioTarget * invertRatioSource) + main * invertRatioSource
-		// 1‚Ì•û–@‚¾‚ÆŒ…ˆì‚ê‚·‚é–‚ª‚ ‚é‚Ì‚ÅA2‚É‚·‚éB
+		// 1ã®æ–¹æ³•ã ã¨æ¡æº¢ã‚Œã™ã‚‹äº‹ãŒã‚ã‚‹ã®ã§ã€2ã«ã™ã‚‹ã€‚
 		/* 1
 		TmpColorT c(0);
 		c += tmpBuffBody[x];
@@ -788,7 +788,7 @@ bool AveragingReduce_RatioAny(
 		}
 	}
 
-	// ‘S‚Ä‚Ìsample‚ªc‚Á‚Ä‚¢‚È‚¢line‚ª‚ ‚éê‡‚Í‚»‚ê‚ğˆ—‚·‚éB
+	// å…¨ã¦ã®sampleãŒæ®‹ã£ã¦ã„ãªã„lineãŒã‚ã‚‹å ´åˆã¯ãã‚Œã‚’å‡¦ç†ã™ã‚‹ã€‚
 	if (imcompleteLineSamples) {
 		// TAIL
 		{
@@ -802,12 +802,12 @@ bool AveragingReduce_RatioAny(
 			}
 			const size_t ratioBG = ratioSource - imcompleteLineSamples;
 			const TmpColorT tmpBGColor = TmpColorT(bgColor) * (ratioTarget * ratioBG * ratioSource) / ratioTarget;
-			// c‚è‚Ì•”•ª‚Í”wŒiF‚Å•â[
+			// æ®‹ã‚Šã®éƒ¨åˆ†ã¯èƒŒæ™¯è‰²ã§è£œå……
 			for (size_t i=0; i<targetWidth; ++i) {
 				tmpBuffMain[i] += tmpBGColor;
 			}
 			// tail
-			// –{“–‚Íc‚Á‚Ä‚éŠ„‡‚Ì•ª‚¾‚¯ˆ—‚µ‚È‚¢‚Æ‘Ê–Ú
+			// æœ¬å½“ã¯æ®‹ã£ã¦ã‚‹å‰²åˆã®åˆ†ã ã‘å‡¦ç†ã—ãªã„ã¨é§„ç›®
 //			AveragingReduceLine_Any(lineCalcParam, pReadLine, tmpBuffMain, ratioTarget);
 //			OffsetPtr(pReadLine, srcLineOffset);
 			

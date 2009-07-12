@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 
 extern "C" {
 #include "LibTIFF/tiffio.h"
@@ -11,7 +11,7 @@ namespace ImageIO {
 
 class ImageReader;
 
-// TODO: ‚Ç‚Ìƒy[ƒW‚ğ“Ç‚Ş‚©w’èo—ˆ‚é‚æ‚¤‚É‚·‚éB
+// TODO: ã©ã®ãƒšãƒ¼ã‚¸ã‚’èª­ã‚€ã‹æŒ‡å®šå‡ºæ¥ã‚‹ã‚ˆã†ã«ã™ã‚‹ã€‚
 
 struct TIFFReader
 {

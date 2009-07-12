@@ -1,8 +1,8 @@
-#pragma once
+ï»¿#pragma once
 
 
 /*
-	ƒvƒŒƒ[ƒ“ƒnƒ€‚ÌƒAƒ‹ƒSƒŠƒYƒ€‚É‚æ‚éü•ª•`‰æ‚ÌÀ‘•
+	ãƒ—ãƒ¬ã‚¼ãƒ³ãƒãƒ ã®ã‚¢ãƒ«ã‚´ãƒªã‚ºãƒ ã«ã‚ˆã‚‹ç·šåˆ†æç”»ã®å®Ÿè£…
 	
 	http://www2.starcat.ne.jp/~fussy/algo/algo1-1.htm
 	http://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm
@@ -24,7 +24,7 @@ template <typename NumericT, typename ColorT, typename ColorBlenderT>
 class LineDrawer_Bresenham : public IBufferLineDrawer<NumericT, ColorT>
 {
 private:
-	Buffer2D<ColorT>*	pBuff_;		//!< •`‰ææ
+	Buffer2D<ColorT>*	pBuff_;		//!< æç”»å…ˆ
 	
 	inline void drawLine(ColorT color, NumericT width, NumericT height, NumericT x1, NumericT y1, NumericT x2, NumericT y2)
 	{
@@ -38,7 +38,7 @@ private:
 		int dy2 = dy * 2;
 		int E;
 
-		// ŒX‚«‚ª1ˆÈ‰º‚Ìê‡
+		// å‚¾ããŒ1ä»¥ä¸‹ã®å ´åˆ
 		if (height <= width) {
 			E = -dx;
 			for (size_t i=0; i<=dx; ++i) {
@@ -50,7 +50,7 @@ private:
 					E -= dx2;
 				}
 			}
-		// ŒX‚«‚ª1‚æ‚è‘å‚«‚¢ê‡
+		// å‚¾ããŒ1ã‚ˆã‚Šå¤§ãã„å ´åˆ
 		}else {
 			E = -dy;
 			for (size_t i=0; i<=dy; ++i) {

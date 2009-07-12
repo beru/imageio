@@ -1,7 +1,7 @@
-#pragma once
+ï»¿#pragma once
 
 /*
-	GDI”C‚¹‚Ìü•ª•`‰æˆ—
+	GDIä»»ã›ã®ç·šåˆ†æç”»å‡¦ç†
 */
 
 #include <math.h>
@@ -20,7 +20,7 @@ template <typename NumericT, typename ColorT>
 class LineDrawer_GDI : public ILineDrawer<NumericT, ColorT>
 {
 protected:
-	Buffer2D<ColorT>*	pBuff_;		//!< •`‰ææ
+	Buffer2D<ColorT>*	pBuff_;		//!< æç”»å…ˆ
 	
 	ColorT color_;
 	NumericT lineWidth_;

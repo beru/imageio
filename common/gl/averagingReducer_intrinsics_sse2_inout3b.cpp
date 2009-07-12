@@ -1,4 +1,4 @@
-#include "AveragingReducer_intrinsics_sse2_inout3b.h"
+ï»¿#include "AveragingReducer_intrinsics_sse2_inout3b.h"
 
 #include "common.h"
 #include "arrayutil.h"
@@ -11,7 +11,7 @@ namespace gl
 namespace intrinsics_sse2_inout3b
 {
 
-// c•ûŒük¬”ä—¦ 1 : NA‰¡•ûŒük¬”ä—¦ 1 : 1
+// ç¸¦æ–¹å‘ç¸®å°æ¯”ç‡ 1 : Nã€æ¨ªæ–¹å‘ç¸®å°æ¯”ç‡ 1 : 1
 void AveragingReduce_Ratio1NX(
 	const size_t heightRatioSource, const size_t width, 
 	const __m128i* srcBuff, const size_t srcHeight, const int srcLineOffsetBytes,
@@ -20,10 +20,10 @@ void AveragingReduce_Ratio1NX(
 	)
 {
 	assert(heightRatioSource < 256);
-	assert(srcLineOffsetBytes % 16 == 0);		// 128ƒrƒbƒg‚ÅŠ„‚èØ‚ê‚é”
-	assert(targetLineOffsetBytes % 16 == 0);	// 128ƒrƒbƒg‚ÅŠ„‚èØ‚ê‚é”
+	assert(srcLineOffsetBytes % 16 == 0);		// 128ãƒ“ãƒƒãƒˆã§å‰²ã‚Šåˆ‡ã‚Œã‚‹æ•°
+	assert(targetLineOffsetBytes % 16 == 0);	// 128ãƒ“ãƒƒãƒˆã§å‰²ã‚Šåˆ‡ã‚Œã‚‹æ•°
 	
-	assert(width % 16 == 0);					// ‰¡16ƒhƒbƒg’PˆÊA‚»‚¤‚Å‚È‚¢‚ÆŠ„‚èØ‚ê‚¸ˆ—‚ª–Ê“|
+	assert(width % 16 == 0);					// æ¨ª16ãƒ‰ãƒƒãƒˆå˜ä½ã€ãã†ã§ãªã„ã¨å‰²ã‚Šåˆ‡ã‚Œãšå‡¦ç†ãŒé¢å€’
 	
 	const size_t outerLoopCount = srcHeight / heightRatioSource;
 	const int srcLineOffset = srcLineOffsetBytes / 16;
@@ -33,7 +33,7 @@ void AveragingReduce_Ratio1NX(
 	const __m128i* pSrc = srcBuff;
 	__m128i* pTarget = targetBuff;
 	
-	// Š„Z‚Åg‚¤”ä—¦‚Ì”š‚Ì‹t”‚ğ16bitŒÅ’è¬”“_”Œ`®‚Å—pˆÓ
+	// å‰²ç®—ã§ä½¿ã†æ¯”ç‡ã®æ•°å­—ã®é€†æ•°ã‚’16bitå›ºå®šå°æ•°ç‚¹æ•°å½¢å¼ã§ç”¨æ„
 	__m128i invertRatioSource = _mm_set1_epi16(RoundValue(65536.0 / heightRatioSource));
 	
 	for (size_t y=0; y<outerLoopCount; ++y) {
@@ -67,7 +67,7 @@ void AveragingReduce_Ratio1NX(
 			__m128i newTmp1 = _mm_mulhi_epu16(tmp1, invertRatioSource);
 			__m128i newTmp2 = _mm_mulhi_epu16(tmp2, invertRatioSource);
 			
-			// 16bit‚©‚ç8bit‚É–O˜a•ÏŠ·
+			// 16bitã‹ã‚‰8bitã«é£½å’Œå¤‰æ›
 			__m128i newTmp = _mm_packus_epi16(newTmp1, newTmp2);
 			_mm_store_si128(targetBase+0, newTmp);
 		}
@@ -332,7 +332,7 @@ void AveragingReduce_RatioAny_StoreToTarget(
 	}
 }
 
-// c•ûŒük¬”ä—¦ 1 : NA‰¡•ûŒük¬”ä—¦ ©—R
+// ç¸¦æ–¹å‘ç¸®å°æ¯”ç‡ 1 : Nã€æ¨ªæ–¹å‘ç¸®å°æ¯”ç‡ è‡ªç”±
 template <typename LineAveragingReducerT>
 void AveragingReduce_Ratio1NX(
 	LineAveragingReducerT& lineReducer,
@@ -342,8 +342,8 @@ void AveragingReduce_Ratio1NX(
 	__m128* tmpBuff
 	)
 {
-	assert(srcLineOffsetBytes % 16 == 0);		// 128ƒrƒbƒg‚ÅŠ„‚èØ‚ê‚é”
-	assert(targetLineOffsetBytes % 16 == 0);	// 128ƒrƒbƒg‚ÅŠ„‚èØ‚ê‚é”
+	assert(srcLineOffsetBytes % 16 == 0);		// 128ãƒ“ãƒƒãƒˆã§å‰²ã‚Šåˆ‡ã‚Œã‚‹æ•°
+	assert(targetLineOffsetBytes % 16 == 0);	// 128ãƒ“ãƒƒãƒˆã§å‰²ã‚Šåˆ‡ã‚Œã‚‹æ•°
 	
 	const size_t outerLoopCount = srcHeight / heightRatioSource;
 	const int srcLineOffset = srcLineOffsetBytes / 16;
@@ -388,7 +388,7 @@ void AveragingReduce_Ratio1NX(
 	}
 }
 
-// c•ûŒük¬”ä—¦©—R
+// ç¸¦æ–¹å‘ç¸®å°æ¯”ç‡è‡ªç”±
 template <typename LineAveragingReducerT>
 void AveragingReduce_RatioAny(
 	LineAveragingReducerT& lineReducer,
@@ -499,8 +499,8 @@ void AveragingReduce_RatioAny(
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
-// 24bit‚Ì”z—ñ‚Ì‘«‚µZˆ—ŠÖ”ŒQA‘«‚µZ‚ÌŒ‹‰Ê‚ÍA128bitƒŒƒWƒXƒ^‚ÉŠi”[‚·‚éB
-// Œ‹‰Ê‚ÍŠe’l16bit3‚Â‚Å48bit‚É‚È‚èAæ“ª‚É“ü‚éB
+// 24bitã®é…åˆ—ã®è¶³ã—ç®—å‡¦ç†é–¢æ•°ç¾¤ã€è¶³ã—ç®—ã®çµæœã¯ã€128bitãƒ¬ã‚¸ã‚¹ã‚¿ã«æ ¼ç´ã™ã‚‹ã€‚
+// çµæœã¯å„å€¤16bit3ã¤ã§48bitã«ãªã‚Šã€å…ˆé ­ã«å…¥ã‚‹ã€‚
 ////////////////////////////////////////////////////////////////////////////////////
 /*
 01 02 03 04 05 06 07 08 09 10 11 12 13 14 15 16
@@ -509,7 +509,7 @@ rgbrgbrgbrgbrgbr
 				                brgbrgbrgbrgbrgb
 */
 
-// 1ƒhƒbƒg‚Ì‘«‚µZˆ—iÀ¿•ÏŠ·‚Ì‚İj
+// 1ãƒ‰ãƒƒãƒˆã®è¶³ã—ç®—å‡¦ç†ï¼ˆå®Ÿè³ªå¤‰æ›ã®ã¿ï¼‰
 __forceinline __m128i Load_1(const __m128i* pSrc)
 {
 #if 0
@@ -526,7 +526,7 @@ __forceinline __m128i Load_1(const __m128i* pSrc)
 #endif
 }
 
-// 2ƒhƒbƒg‚Ì‘«‚µZˆ—
+// 2ãƒ‰ãƒƒãƒˆã®è¶³ã—ç®—å‡¦ç†
 __forceinline __m128i Add_2(const __m128i* pSrc)
 {
 	__m128i bytes = _mm_loadl_epi64(pSrc);
@@ -536,7 +536,7 @@ __forceinline __m128i Add_2(const __m128i* pSrc)
 	return sum;
 }
 
-// 3ƒhƒbƒg‚Ì‘«‚µZˆ—
+// 3ãƒ‰ãƒƒãƒˆã®è¶³ã—ç®—å‡¦ç†
 __forceinline __m128i Add_3(const __m128i* pSrc)
 {
 	__m128i bytes = load_unaligned_128(pSrc);
@@ -904,7 +904,7 @@ __forceinline __m128i Add(const __m128i* pSrc, const size_t count)
 
 
 
-// AMD sempron Manila‚¾‚ÆA’x‚¢B‰‰Z‰ñ”‚ª‘½‚·‚¬‚é‚Ì‚©H
+// AMD sempron Manilaã ã¨ã€é…ã„ã€‚æ¼”ç®—å›æ•°ãŒå¤šã™ãã‚‹ã®ã‹ï¼Ÿ
 inline void Collect8_Add_2(
 	const __m128i* srcBuff,
 	__m128i& t1, __m128i& t2, __m128i& t3
@@ -924,24 +924,24 @@ inline void Collect8_Add_2(
 	
 	/////////////////////////////////////////////
 
-	w0 = _mm_slli_si128(shorts0, 10);									// 0000000000R1G1B1 shorts0‚ğshift
-	w1 = _mm_slli_si128(shorts0, 4);									// 0000R1G1B1R2G2B2 shorts0‚ğshift
+	w0 = _mm_slli_si128(shorts0, 10);									// 0000000000R1G1B1 shorts0ã‚’shift
+	w1 = _mm_slli_si128(shorts0, 4);									// 0000R1G1B1R2G2B2 shorts0ã‚’shift
 	w0 = _mm_add_epi16(w0, w1);											// 0000R1G1B1RxGxBx add
 	w00 = _mm_srli_si128(w0, 10);										// RxGxBx0000000000 shift
 	
-	w0 = _mm_srli_si128(shorts0, 12);									// R3G3000000000000 shorts0‚ğshift
-	w1 = _mm_slli_si128(shorts1, 14);									// 00000000000000B3 shorts1‚ğshift
+	w0 = _mm_srli_si128(shorts0, 12);									// R3G3000000000000 shorts0ã‚’shift
+	w1 = _mm_slli_si128(shorts1, 14);									// 00000000000000B3 shorts1ã‚’shift
 	w1 = _mm_srli_si128(w1, 10);										// 0000B30000000000 shift
 	w1 = _mm_or_si128(w0, w1);											// R3G3B30000000000 or
-	w0 = _mm_slli_si128(shorts1, 8);									// 00000000B3R4G4B4 shorts1‚ğshift
+	w0 = _mm_slli_si128(shorts1, 8);									// 00000000B3R4G4B4 shorts1ã‚’shift
 	w0 = _mm_srli_si128(w0, 10);										// R4G4B40000000000 shift
 	w0 = _mm_add_epi16(w0, w1);											// RxGxBx0000000000 add
 	w01 = _mm_slli_si128(w0, 6);										// 000000RxGxBx0000 shift
 	
-	w0 = _mm_srli_si128(shorts1, 8);									// R5G5B5R600000000 shorts1‚ğshift
+	w0 = _mm_srli_si128(shorts1, 8);									// R5G5B5R600000000 shorts1ã‚’shift
 	w2 = _mm_slli_si128(w0, 12);										// 000000000000R5G5 shift
-	w0 = _mm_srli_si128(shorts1, 14);									// R600000000000000 shorts1‚ğshift
-	w1 = _mm_slli_si128(shorts2, 2);									// 00G6B6R7G7B7R8G8 shorts2‚ğshift
+	w0 = _mm_srli_si128(shorts1, 14);									// R600000000000000 shorts1ã‚’shift
+	w1 = _mm_slli_si128(shorts2, 2);									// 00G6B6R7G7B7R8G8 shorts2ã‚’shift
 	w0 = _mm_or_si128(w0, w1);											// R6G6B6R7G7B7R8G8 or
 	w0 = _mm_slli_si128(w0, 12);										// 000000000000R6G6 shift
 	w02 = _mm_add_epi16(w2, w0);										// 000000000000RxGx add
@@ -953,26 +953,26 @@ inline void Collect8_Add_2(
 
 	/////////////////////////////////////////////
 	
-	w0 = _mm_slli_si128(shorts1, 2);									// 00B3R4G4B4R5G5B5 shorts1‚ğshift
-	w1 = _mm_slli_si128(shorts2, 12);									// 000000000000G6B6 shorts2‚ğshift
+	w0 = _mm_slli_si128(shorts1, 2);									// 00B3R4G4B4R5G5B5 shorts1ã‚’shift
+	w1 = _mm_slli_si128(shorts2, 12);									// 000000000000G6B6 shorts2ã‚’shift
 	w0 = _mm_add_epi16(w0, w1);											// --------------B5 add
 	w00 = _mm_srli_si128(w0, 14);										// B500000000000000 shift
 	
-	w0 = _mm_slli_si128(shorts2, 6);									// 000000G6B6R7G7B7 shorts2‚ğshift
-	;																	// G6B6R7G7B7R8G8B8 shorts2‚»‚Ì‚Ü‚Ü
+	w0 = _mm_slli_si128(shorts2, 6);									// 000000G6B6R7G7B7 shorts2ã‚’shift
+	;																	// G6B6R7G7B7R8G8B8 shorts2ãã®ã¾ã¾
 	w1 = _mm_add_epi16(w0, shorts2);									// ----------R7G7B7 add
 	w1 = _mm_srli_si128(w1, 10);										// R7G7B70000000000 shift
 	w01 = _mm_slli_si128(w1, 2);										// 00R7G7B700000000 shift
 	
-	;																	// R9G9B9RaGaBaRbGb shorts3‚»‚Ì‚Ü‚Ü
-	w0 = _mm_srli_si128(shorts3, 6);									// RaGaBaRbGb000000 shorts3‚ğshift
+	;																	// R9G9B9RaGaBaRbGb shorts3ãã®ã¾ã¾
+	w0 = _mm_srli_si128(shorts3, 6);									// RaGaBaRbGb000000 shorts3ã‚’shift
 	w0 = _mm_add_epi16(shorts3, w0);									// R9G9B9---------- add
 	w0 = _mm_slli_si128(w0, 10);										// 0000000000R9G9B9 shift
 	w02 = _mm_srli_si128(w0, 2);										// 00000000R9G9B900 shift
 	
-	w0 = _mm_srli_si128(shorts3, 12);									// RbGb000000000000 shorts3‚ğshift
+	w0 = _mm_srli_si128(shorts3, 12);									// RbGb000000000000 shorts3ã‚’shift
 	w0 = _mm_slli_si128(w0, 14);										// 00000000000000Rb shift
-	w1 = _mm_srli_si128(shorts4, 2);									// RcGcBcRdGdBdRe00 shorts4‚ğshift
+	w1 = _mm_srli_si128(shorts4, 2);									// RcGcBcRdGdBdRe00 shorts4ã‚’shift
 	w1 = _mm_slli_si128(w1, 14);										// 00000000000000Rc shift
 	w03 = _mm_add_epi16(w0, w1);										// 00000000000000Rb add
 	
@@ -983,23 +983,23 @@ inline void Collect8_Add_2(
 //	t2 = _mm_setzero_si128();
 
 	/////////////////////////////////////////////
-	w0 = _mm_srli_si128(shorts3, 2);									// G9B9RaGaBaRbGb00 shorts3‚ğshift
-	w1 = _mm_slli_si128(shorts4, 14);									// 00000000000000Bb shorts4‚ğshift
+	w0 = _mm_srli_si128(shorts3, 2);									// G9B9RaGaBaRbGb00 shorts3ã‚’shift
+	w1 = _mm_slli_si128(shorts4, 14);									// 00000000000000Bb shorts4ã‚’shift
 	w0 = _mm_or_si128(w0, w1);											// G9B9RaGaBaRbGbBb or
 	w0 = _mm_srli_si128(w0, 12);										// GbBb000000000000 shift
-	w1 = _mm_slli_si128(shorts4, 8);									// 00000000BbRcGcBc shorts4‚ğshift
+	w1 = _mm_slli_si128(shorts4, 8);									// 00000000BbRcGcBc shorts4ã‚’shift
 	w1 = _mm_srli_si128(w1, 12);										// GcBc000000000000 shift
 	w00 = _mm_add_epi16(w0, w1);										// GbBb000000000000 add
 	
-	w0 = _mm_slli_si128(shorts4, 2);									// 00BbRcGcBcRdGdBd shorts4‚ğshift
-	w1 = _mm_srli_si128(shorts4, 4);									// GcBcRdGdBdRe0000 shorts4‚ğshift
-	w2 = _mm_slli_si128(shorts5, 12);									// 000000000000GeBe shorts5‚ğshift
+	w0 = _mm_slli_si128(shorts4, 2);									// 00BbRcGcBcRdGdBd shorts4ã‚’shift
+	w1 = _mm_srli_si128(shorts4, 4);									// GcBcRdGdBdRe0000 shorts4ã‚’shift
+	w2 = _mm_slli_si128(shorts5, 12);									// 000000000000GeBe shorts5ã‚’shift
 	w1 = _mm_or_si128(w1, w2);											// GcBcRdGdBdReGeBe or
 	w0 = _mm_add_epi16(w0, w1);											// ----------RdGdBd add
 	w0 = _mm_srli_si128(w0, 10);										// RdGdBd0000000000 shift
 	w01 = _mm_slli_si128(w0, 4);										// 0000RdGdBd000000 shift
 	
-	;																	// shorts5‚»‚Ì‚Ü‚Ü
+	;																	// shorts5ãã®ã¾ã¾
 	w0 = _mm_slli_si128(shorts5, 6);									// 000000GeBeRfGfBf shift
 	w1 = _mm_add_epi16(shorts5, w0);									// ----------RfGfBf add
 	w1 = _mm_srli_si128(w1, 10);										// RfGfBf0000000000 shift
@@ -1104,7 +1104,7 @@ inline void AddAverage16(
 	_mm_store_si128(pTarget+2, packed3);
 }
 
-// c•ûŒük¬”ä—¦ 1: NA‰¡•ûŒük¬”ä—¦ 1 : M
+// ç¸¦æ–¹å‘ç¸®å°æ¯”ç‡ 1: Nã€æ¨ªæ–¹å‘ç¸®å°æ¯”ç‡ 1 : M
 void AveragingReduce_RatioNXNX(
 	const size_t widthRatioSource, const size_t heightRatioSource,
 	const __m128i* srcBuff, const size_t srcWidth, const size_t srcHeight, const int srcLineOffsetBytes,
@@ -1354,7 +1354,7 @@ public:
 		process(pSrc, Double(pTarget1, mulFactor1, pTarget2, mulFactor2));
 	}
 #else
-	// ‰º‹L‚Ì•û–@‚ÍACore2 Merom‚¾‚Æ­‚µ‘¬‚¢‚ª(7/8)AAthlon64 Sempron‚¾‚Æ‚Æ‚Ä‚à’x‚¢B(3/2)
+	// ä¸‹è¨˜ã®æ–¹æ³•ã¯ã€Core2 Meromã ã¨å°‘ã—é€Ÿã„ãŒ(7/8)ã€Athlon64 Sempronã ã¨ã¨ã¦ã‚‚é…ã„ã€‚(3/2)
 	void iterate(const __m128i* pSrc, __m128* pTarget)
 	{
 		struct Single

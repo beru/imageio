@@ -1,7 +1,7 @@
-#pragma once
+ï»¿#pragma once
 
 /*
-	F•ÏŠ·ˆ—
+	è‰²å¤‰æ›å‡¦ç†
 */
 
 #include "color.h"

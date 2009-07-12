@@ -1,8 +1,8 @@
-#pragma once
+ï»¿#pragma once
 
 
 /*!	@file
-	@brief “ñŸŒ³ƒxƒNƒgƒ‹
+	@brief äºŒæ¬¡å…ƒãƒ™ã‚¯ãƒˆãƒ«
 */
 
 #include <limits>
@@ -16,7 +16,7 @@ namespace gl
 {
 
 /*!	@class
-	“ñŸŒ³ƒxƒNƒgƒ‹—p‚Ìclass template
+	äºŒæ¬¡å…ƒãƒ™ã‚¯ãƒˆãƒ«ç”¨ã®class template
 */
 template <typename T>
 class Vector2
@@ -109,7 +109,7 @@ public:
 		return ret /= t;
 	}
 	
-	//! “àÏ
+	//! å†…ç©
 	T DotProduct(const Vector2& v) const {
 		return Vector2::DotProduct(*this, v);
 	}
@@ -118,7 +118,7 @@ public:
 		return (lhs.x * rhs.x + lhs.y * rhs.y);
 	}
 	
-	//! ŠOÏ
+	//! å¤–ç©
 	T CrossProduct(const Vector2& vec) const {
 		return Vector2::CrossProduct(*this, vec);
 	}
@@ -127,12 +127,12 @@ public:
 		return lhs.x * rhs.y - lhs.y * rhs.x;
 	}
 	
-	//! ’·‚³‚Ì“ñæ
+	//! é•·ã•ã®äºŒä¹—
 	T LengthSquare() const {
 		return x*x + y*y;
 	}
 	
-	//! ’·‚³
+	//! é•·ã•
 	T Length() const {
 		return sqrt(LengthSquare());
 	}
@@ -141,7 +141,7 @@ public:
 		return Length();
 	}
 	
-	//! ³‹K‰»‚µ‚ÄAƒˆ‚É•ûŒü‚¾‚¯‚ğ•\‚·ƒxƒNƒgƒ‹‚É‚·‚éB
+	//! æ­£è¦åŒ–ã—ã¦ã€ç´”ç²‹ã«æ–¹å‘ã ã‘ã‚’è¡¨ã™ãƒ™ã‚¯ãƒˆãƒ«ã«ã™ã‚‹ã€‚
 	Vector2 Normalize() const {
 		return *this / Scalar();
 	}

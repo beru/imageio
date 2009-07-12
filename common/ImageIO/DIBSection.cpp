@@ -1,4 +1,4 @@
-#include "DIBSection.h"
+ï»¿#include "DIBSection.h"
 
 #include "CreateDIB.h"
 #include "ArrayUtil.h"
@@ -58,11 +58,11 @@ bool DIBSectionReader::Setup()
 	}
 	
 	size_t setupWidth = imageInfo_.width;
-	// 128bit’PˆÊ‚É‚µ‚½‚¢‚Ì‚ÅA‰¡‚ğ16‚Ì”{”‚ÅŠm•Û‚·‚éB
+	// 128bitå˜ä½ã«ã—ãŸã„ã®ã§ã€æ¨ªã‚’16ã®å€æ•°ã§ç¢ºä¿ã™ã‚‹ã€‚
 	if (setupWidth % 16) {
 		setupWidth += 16 - setupWidth % 16;
 	}
-	// ‰æ‘œˆ—‚ÌŠÖŒWãA‰¡‚ğ—]•ª‚É16ƒhƒbƒg‘½‚­Šm•Û‚·‚éBiŠm•Û—Ìˆæ‚ğ‘OŒã‚É16byte—]•ª‚Éì‚é•û–@‚É”ä‚×‚é‚Æ–Ü‘Ì–³‚¢‚¯‚ÇACreateDIBSection‚Åw’èo—ˆ‚¸cj
+	// ç”»åƒå‡¦ç†ã®é–¢ä¿‚ä¸Šã€æ¨ªã‚’ä½™åˆ†ã«16ãƒ‰ãƒƒãƒˆå¤šãç¢ºä¿ã™ã‚‹ã€‚ï¼ˆç¢ºä¿é ˜åŸŸã‚’å‰å¾Œã«16byteä½™åˆ†ã«ä½œã‚‹æ–¹æ³•ã«æ¯”ã¹ã‚‹ã¨å‹¿ä½“ç„¡ã„ã‘ã©ã€CreateDIBSectionã§æŒ‡å®šå‡ºæ¥ãšâ€¦ï¼‰
 	setupWidth += 16;
 	
 	size_t setupHeight = imageInfo_.height;

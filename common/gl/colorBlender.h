@@ -1,13 +1,13 @@
-#pragma once
+ï»¿#pragma once
 
 /*
-	F¬‚º‡‚í‚¹ˆ—
+	è‰²æ··ãœåˆã‚ã›å‡¦ç†
 */
 
 namespace gl
 {
 
-//! ¬‚º‚Ü‚¹‚ñ
+//! æ··ãœã¾ã›ã‚“
 template <typename ColorT, typename NumericT>
 struct ColorUnblender
 {
@@ -23,13 +23,13 @@ struct ColorUnblender
 	}
 };
 
-//! “h‚èd‚Ë‚é
+//! å¡—ã‚Šé‡ã­ã‚‹
 template <typename ColorT, typename NumericT>
 struct PaintColorBlender
 {
 	ColorT operator() (ColorT foreColor, ColorT backColor)
 	{
-		// ‚»‚ê‚¼‚ê‚ÌF‚Ì•s“§–¾“x‚ğl—¶‚µ‚Ä¬‚º‚éB
+		// ãã‚Œãã‚Œã®è‰²ã®ä¸é€æ˜åº¦ã‚’è€ƒæ…®ã—ã¦æ··ãœã‚‹ã€‚
 		NumericT bcFactor = OneMinusEpsilon(NumericT(1)) - foreColor.a;
 		NumericT foreAlpha = NumericT(foreColor.a);
 		ColorT ret(
@@ -44,7 +44,7 @@ struct PaintColorBlender
 	
 	ColorT operator() (ColorT foreColor, NumericT foreColorAlpha, ColorT backColor)
 	{
-		// ‚»‚ê‚¼‚ê‚ÌF‚Ì•s“§–¾“x‚ğl—¶‚µ‚Ä¬‚º‚éB
+		// ãã‚Œãã‚Œã®è‰²ã®ä¸é€æ˜åº¦ã‚’è€ƒæ…®ã—ã¦æ··ãœã‚‹ã€‚
 		NumericT bcFactor = OneMinusEpsilon(NumericT(1)) - foreColorAlpha;
 		ColorT ret(
 			NumericT(foreColor.r) * foreColorAlpha + NumericT(backColor.r) * bcFactor,
@@ -62,7 +62,7 @@ struct PaintColor1Blender
 {
 	Color1T operator() (Color1T foreColor, Color1T backColor)
 	{
-		// ‚»‚ê‚¼‚ê‚ÌF‚Ì•s“§–¾“x‚ğl—¶‚µ‚Ä¬‚º‚éB
+		// ãã‚Œãã‚Œã®è‰²ã®ä¸é€æ˜åº¦ã‚’è€ƒæ…®ã—ã¦æ··ãœã‚‹ã€‚
 		Color1T::value_type bcFactor = OneMinusEpsilon(Color1T::value_type(1)) - foreColor.a;
 		Color1T ret(
 			(foreColor.a + backColor.a * bcFactor)
@@ -72,7 +72,7 @@ struct PaintColor1Blender
 
 	Color1T operator() (Color1T foreColor, NumericT foreColorAlpha, Color1T backColor)
 	{
-		// ‚»‚ê‚¼‚ê‚ÌF‚Ì•s“§–¾“x‚ğl—¶‚µ‚Ä¬‚º‚éB
+		// ãã‚Œãã‚Œã®è‰²ã®ä¸é€æ˜åº¦ã‚’è€ƒæ…®ã—ã¦æ··ãœã‚‹ã€‚
 		NumericT bcFactor = OneMinusEpsilon(NumericT(1)) - foreColorAlpha;
 		Color1T ret(
 			gl::min(foreColorAlpha + backColor.a * bcFactor, OneMinusEpsilon(NumericT(1)))
@@ -87,7 +87,7 @@ struct AdditiveColorBlender
 {
 	ColorT operator() (ColorT foreColor, NumericT foreColorAlpha, ColorT backColor)
 	{
-		// ‚»‚ê‚¼‚ê‚ÌF‚Ì•s“§–¾“x‚ğl—¶‚µ‚Ä¬‚º‚éB
+		// ãã‚Œãã‚Œã®è‰²ã®ä¸é€æ˜åº¦ã‚’è€ƒæ…®ã—ã¦æ··ãœã‚‹ã€‚
 		ColorT ret(
 			gl::min<NumericT>(NumericT(foreColor.r) * foreColorAlpha + NumericT(backColor.r), OneMinusEpsilon(NumericT(1))),
 			gl::min<NumericT>(NumericT(foreColor.g) * foreColorAlpha + NumericT(backColor.g), OneMinusEpsilon(NumericT(1))),
@@ -111,13 +111,13 @@ struct AdditiveColor1Blender
 	}
 };
 
-// •’Ê‚ÉF‚ğ¬‚º‚é
+// æ™®é€šã«è‰²ã‚’æ··ãœã‚‹
 template <typename ColorT>
 struct NormalColorBlender
 {
 	ColorT operator() (ColorT a, ColorT b)
 	{
-		// ‚»‚ê‚¼‚ê‚ÌF‚Ì•s“§–¾“x‚ğl—¶‚µ‚Ä¬‚º‚éB
+		// ãã‚Œãã‚Œã®è‰²ã®ä¸é€æ˜åº¦ã‚’è€ƒæ…®ã—ã¦æ··ãœã‚‹ã€‚
 		T sum = a.a + b.a;
 		T percentage1 = a.a / sum;
 		T percentage2 = b.a / sum;

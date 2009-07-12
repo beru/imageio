@@ -1,7 +1,7 @@
-#pragma once
+ï»¿#pragma once
 
 /*
-	‰~•`‰æˆ—
+	å††æç”»å‡¦ç†
 */
 
 #include "glbuffer2d.h"

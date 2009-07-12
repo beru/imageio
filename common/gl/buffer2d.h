@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 
 #include <assert.h>
 #include "arrayutil.h"
@@ -15,14 +15,14 @@ class Buffer2D : public IBuffer2D
 public:
 	typedef ColorT value_type;
 private:
-	size_t width_;			//!< •`‰æ—Ìˆæ‚Ì‰¡•
-	size_t height_;			//!< •`‰æ—Ìˆæ‚Ìc•
-	int lineOffset_;		//!< YÀ•W‚ð1‚Âã‚°‚é‚Ì‚É•K—v‚ÈƒoƒCƒg”B
-	unsigned char* pBuff_;	//!< •`‰æ—Ìˆæ‚Æ‚µ‚ÄŠm•Û‚µ‚½—Ìˆæ‚ÌƒAƒhƒŒƒX‚ð•ÛŽ‚·‚éƒ|ƒCƒ“ƒ^AÀ•Wi0, 0)‚ðŽw‚·B
+	size_t width_;			//!< æç”»é ˜åŸŸã®æ¨ªå¹…
+	size_t height_;			//!< æç”»é ˜åŸŸã®ç¸¦å¹…
+	int lineOffset_;		//!< Yåº§æ¨™ã‚’1ã¤ä¸Šã’ã‚‹ã®ã«å¿…è¦ãªãƒã‚¤ãƒˆæ•°ã€‚
+	unsigned char* pBuff_;	//!< æç”»é ˜åŸŸã¨ã—ã¦ç¢ºä¿ã—ãŸé ˜åŸŸã®ã‚¢ãƒ‰ãƒ¬ã‚¹ã‚’ä¿æŒã™ã‚‹ãƒã‚¤ãƒ³ã‚¿ã€åº§æ¨™ï¼ˆ0, 0)ã‚’æŒ‡ã™ã€‚
 	
-	bool allocated_;	//!< ‚±‚Ìinstance‚ªbuff_‚ðŠm•Û‚µ‚½‚Ì‚©‚Ç‚¤‚©
+	bool allocated_;	//!< ã“ã®instanceãŒbuff_ã‚’ç¢ºä¿ã—ãŸã®ã‹ã©ã†ã‹
 	
-	// Žw’è‚µ‚½À•W‚Ì‰æ‘f‚ªAæ“ª‚©‚ç‰½ƒoƒCƒg–Ú‚É‘¶Ý‚·‚é‚©
+	// æŒ‡å®šã—ãŸåº§æ¨™ã®ç”»ç´ ãŒã€å…ˆé ­ã‹ã‚‰ä½•ãƒã‚¤ãƒˆç›®ã«å­˜åœ¨ã™ã‚‹ã‹
 	__forceinline size_t buffPos(size_t x, size_t y) const
 	{
 		assert(x+1 <= width_);
@@ -60,7 +60,7 @@ public:
 		allocated_	= true;
 	}
 	
-	//! “à•”‚Å•`‰æ—Ìˆæ‚ðŠm•Û‚µ‚È‚¢‚ÅAŠO‚©‚ç“n‚Á‚Ä‚«‚½À•W‚ð—˜—p
+	//! å†…éƒ¨ã§æç”»é ˜åŸŸã‚’ç¢ºä¿ã—ãªã„ã§ã€å¤–ã‹ã‚‰æ¸¡ã£ã¦ããŸåº§æ¨™ã‚’åˆ©ç”¨
 	Buffer2D(size_t width, size_t height, int lineOffset, void* pBuff)
 	{
 		width_		= width;

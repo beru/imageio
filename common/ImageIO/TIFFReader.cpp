@@ -1,4 +1,4 @@
-#include "stdafx.h"
+ï»¿#include "stdafx.h"
 
 #include "TiffReader.h"
 #include "ImageReader.h"
@@ -107,7 +107,7 @@ struct PaletteConverter
 {
 	void Convert(char* buff, size_t bps, size_t totalSamples)
 	{
-		// TODO: 9`15, 17`bitˆÈã‚ÌƒpƒŒƒbƒg‰æ‘œ‚É‘Î‰
+		// TODO: 9ï½15, 17ï½bitä»¥ä¸Šã®ãƒ‘ãƒ¬ãƒƒãƒˆç”»åƒã«å¯¾å¿œ
 		uint32_t mask = 0;
 		if (bps <= 8) {
 			uint8_t m = (~0);
@@ -572,7 +572,7 @@ union Multi
 
 bool TIFFReader::ReadStrippedContiguous()
 {
-	// TODO: ‹L˜^‚³‚ê‚Ä‚¢‚éendian‚ÆÀsŠÂ‹«‚Ìendian‚ªˆÙ‚È‚Á‚½ê‡‚ÉØ‚è•ª‚¯‚éB
+	// TODO: è¨˜éŒ²ã•ã‚Œã¦ã„ã‚‹endianã¨å®Ÿè¡Œç’°å¢ƒã®endianãŒç•°ãªã£ãŸå ´åˆã«åˆ‡ã‚Šåˆ†ã‘ã‚‹ã€‚
 	
 	if (bps == 8 || bps == 16 || bps == 32) arranger.bind(&DoNothing);
 	else if (bps < 8)						arranger.bind(&BitsToUInt8);

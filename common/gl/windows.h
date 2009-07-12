@@ -1,7 +1,7 @@
-#pragma once
+ï»¿#pragma once
 
 /*
-	Windows“Á—L‚Ìˆ—”z’u
+	Windowsç‰¹æœ‰ã®å‡¦ç†é…ç½®
 */
 
 #include "color.h"

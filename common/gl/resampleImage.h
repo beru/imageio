@@ -1,7 +1,7 @@
-#pragma once
+ï»¿#pragma once
 
 /*
-	‰æ‘œƒŠƒTƒ“ƒvƒŠƒ“ƒOˆ—
+	ç”»åƒãƒªã‚µãƒ³ãƒ—ãƒªãƒ³ã‚°å‡¦ç†
 */
 
 #define _USE_MATH_DEFINES

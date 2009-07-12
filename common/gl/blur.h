@@ -1,9 +1,9 @@
-#pragma once
+ï»¿#pragma once
 
 #include <numeric>
 
 /*
-	ˆÚ“®•½‹Ï‚É‚æ‚é‰æ‘œ‚Ú‚©‚µˆ—
+	ç§»å‹•å¹³å‡ã«ã‚ˆã‚‹ç”»åƒã¼ã‹ã—å‡¦ç†
 */
 
 namespace gl
@@ -27,11 +27,11 @@ void MovingAverageHorizontal(
 {
 	const NumericT divFactor = NumericT(1) / NumericT(nSamples * 2 + 1);
 	
-	// ’[‚Á‚±‚ÌPixel‚ğ‰„’·‚·‚é
+	// ç«¯ã£ã“ã®Pixelã‚’å»¶é•·ã™ã‚‹
 	const SrcColorT* pSrcWrk = pSrc;
 	TargetColorT* pTargetWrk = pTarget;
 	
-	// Å‰‚Ìsample‚Í¶’[‚ğsample•ª’Ç‰Á
+	// æœ€åˆã®sampleã¯å·¦ç«¯ã‚’sampleåˆ†è¿½åŠ 
 	const WorkColorT firstPixel = srcToWorkConverter(*pSrcWrk);
 	WorkColorT total = firstPixel * (1+nSamples);
 	++pSrcWrk;
@@ -43,7 +43,7 @@ void MovingAverageHorizontal(
 	*pTargetWrk = workToTargetConverter(total * divFactor);
 	++pTargetWrk;
 	
-	// n‚ß‚Ì‚¤‚¿‚Ìsample‚Í¶’[‚ğ‰„’·‚µ‚Äg‚¤‚Ì‚Å¶’[‚ğˆø‚­B
+	// å§‹ã‚ã®ã†ã¡ã®sampleã¯å·¦ç«¯ã‚’å»¶é•·ã—ã¦ä½¿ã†ã®ã§å·¦ç«¯ã‚’å¼•ãã€‚
 	for (; x<1+nSamples*2; ++x) {
 		total -= firstPixel;
 		total += srcToWorkConverter(*pSrcWrk);
@@ -52,7 +52,7 @@ void MovingAverageHorizontal(
 		++pTargetWrk;
 	}
 	
-	// ’†ŠÔ‚Í•’Ê‚Éˆ—‚·‚éB
+	// ä¸­é–“ã¯æ™®é€šã«å‡¦ç†ã™ã‚‹ã€‚
 	const SrcColorT* pSrcOld = pSrc;
 	for (; x<count-nSamples; ++x) {
 		total -= srcToWorkConverter(*pSrcOld);
@@ -63,7 +63,7 @@ void MovingAverageHorizontal(
 		++pTargetWrk;
 	}
 	
-	// I‚í‚è‚Ì•û‚Í‰E’[‚ğ‰„’·‚µ‚Äg‚¤‚Ì‚Å‰E’[‚ğ‘«‚·B
+	// çµ‚ã‚ã‚Šã®æ–¹ã¯å³ç«¯ã‚’å»¶é•·ã—ã¦ä½¿ã†ã®ã§å³ç«¯ã‚’è¶³ã™ã€‚
 	const WorkColorT lastPixel = srcToWorkConverter(*(pSrc + count - 1));
 	for (; x<count+nSamples; ++x) {
 		total -= srcToWorkConverter(*pSrcOld);
@@ -129,11 +129,11 @@ void MovingAverageVertical(
 {
 	const NumericT divFactor = NumericT(1) / NumericT(nSamples * 2 + 1);
 	
-	// ’[‚Á‚±‚ÌPixel‚ğ‰„’·‚·‚é
+	// ç«¯ã£ã“ã®Pixelã‚’å»¶é•·ã™ã‚‹
 	const SrcColorT* pSrcWrk = pSrc;
 	TargetColorT* pTargetWrk = pTarget;
 	
-	// Å‰‚Ìsample‚Í¶’[‚ğsample•ª’Ç‰Á
+	// æœ€åˆã®sampleã¯å·¦ç«¯ã‚’sampleåˆ†è¿½åŠ 
 	const WorkColorT firstPixel = srcToWorkConverter(*pSrcWrk);
 	WorkColorT total = firstPixel * (1+nSamples);
 	OffsetPtr(pSrcWrk, srcLineOffset);
@@ -145,7 +145,7 @@ void MovingAverageVertical(
 	*pTargetWrk = workToTargetConverter(total * divFactor);
 	OffsetPtr(pTargetWrk, targetLineOffset);
 	
-	// n‚ß‚Ì‚¤‚¿‚Ìsample‚Í¶’[‚ğ‰„’·‚µ‚Äg‚¤‚Ì‚Å¶’[‚ğˆø‚­B
+	// å§‹ã‚ã®ã†ã¡ã®sampleã¯å·¦ç«¯ã‚’å»¶é•·ã—ã¦ä½¿ã†ã®ã§å·¦ç«¯ã‚’å¼•ãã€‚
 	for (; x<1+nSamples*2; ++x) {
 		total -= firstPixel;
 		total += srcToWorkConverter(*pSrcWrk);
@@ -154,7 +154,7 @@ void MovingAverageVertical(
 		OffsetPtr(pTargetWrk, targetLineOffset);
 	}
 	
-	// ’†ŠÔ‚Í•’Ê‚Éˆ—‚·‚éB
+	// ä¸­é–“ã¯æ™®é€šã«å‡¦ç†ã™ã‚‹ã€‚
 	const SrcColorT* pSrcOld = pSrc;
 	for (; x<count-nSamples; ++x) {
 		total -= srcToWorkConverter(*pSrcOld);
@@ -165,7 +165,7 @@ void MovingAverageVertical(
 		OffsetPtr(pTargetWrk, targetLineOffset);
 	}
 	
-	// I‚í‚è‚Ì•û‚Í‰E’[‚ğ‰„’·‚µ‚Äg‚¤‚Ì‚Å‰E’[‚ğ‘«‚·B
+	// çµ‚ã‚ã‚Šã®æ–¹ã¯å³ç«¯ã‚’å»¶é•·ã—ã¦ä½¿ã†ã®ã§å³ç«¯ã‚’è¶³ã™ã€‚
 	const SrcColorT* pLast = pSrc;
 	OffsetPtr(pLast, srcLineOffset * (count - 1));
 	const WorkColorT lastPixel = srcToWorkConverter(*pLast);

@@ -1,4 +1,4 @@
-#include "StdAfx.h"
+ï»¿#include "StdAfx.h"
 #include ".\imageview.h"
 
 #include "CreateDIB.h"
@@ -149,7 +149,7 @@ OutputDebugString(buff);
 		if (addr == 0) {
 			errno_t err;
 			_get_errno(&err);
-			MessageBox(_T("ƒƒ‚ƒŠ•s‘«‚Å‚·B"), _T("error"));
+			MessageBox(_T("ãƒ¡ãƒ¢ãƒªä¸è¶³ã§ã™ã€‚"), _T("error"));
 			return false;
 		}
 		m_tmpBuffs[i] = addr;
@@ -432,8 +432,8 @@ bool CImageView::render(CSize sz)
 		m_renderReportDelegate(widthRatioTarget, widthRatioSource, heightRatioTarget, heightRatioSource, timeGetTime()-startTime);
 	}
 
-	// k¬”ä—¦‚ª•Ï‚í‚ç‚È‚­‚Ä‚àA‘‹‚Ì‘å‚«‚³‚Í•Ï‚í‚éŽ–‚ª‚ ‚é‚Ì‚ÅB
-	// ‚Å‚àŽžŠÔŒv‘ª‚Ì”ÍˆÍŠO‚Åˆ—‚Í‚ ‚Ü‚èD‚Ü‚µ‚­‚È‚¢cB
+	// ç¸®å°æ¯”çŽ‡ãŒå¤‰ã‚ã‚‰ãªãã¦ã‚‚ã€çª“ã®å¤§ãã•ã¯å¤‰ã‚ã‚‹äº‹ãŒã‚ã‚‹ã®ã§ã€‚
+	// ã§ã‚‚æ™‚é–“è¨ˆæ¸¬ã®ç¯„å›²å¤–ã§å‡¦ç†ã¯ã‚ã¾ã‚Šå¥½ã¾ã—ããªã„â€¦ã€‚
 	if (m_bPreserveAspectRatio) {
 		void* pTarget = m_pTarget->GetPixelVoidPtr(0,0);
 		{
