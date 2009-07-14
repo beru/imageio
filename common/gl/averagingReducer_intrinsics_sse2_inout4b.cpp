@@ -133,10 +133,10 @@ void StoreToTarget(
 		
 		__m128i twoPixels0 = _mm_adds_epu16(headPixels0, tailPixels0);
 		__m128i twoPixels1 = _mm_adds_epu16(headPixels1, tailPixels1);
-
+		
 		__m128i p0 = _mm_mulhi_epu16(twoPixels0, hvTargetSrcRatio);
 		__m128i p1 = _mm_mulhi_epu16(twoPixels1, hvTargetSrcRatio);
-
+		
 		// 16 -> 8
 		__m128i result = _mm_packus_epi16(p0, p1);
 		targetBuff[i] = result;
@@ -1493,6 +1493,17 @@ void AveragingReducer::Setup(const AveragingReduceParams* pParams, uint16_t part
 	}
 }
 
+template <typename LineReducerT>
+void Read(LineReducerT& lineReducer, const __m128i*& pSrc, __m128i* pTarget, ptrdiff_t offsetBytes, uint16_t addReadCount)
+{
+	lineReducer.fillRead(pSrc, pTarget);
+	OffsetPtr(pSrc, offsetBytes);
+	for (uint16_t i=0; i<addReadCount; ++i) {
+		lineReducer.addRead(pSrc, pTarget);
+		OffsetPtr(pSrc, offsetBytes);
+	}
+}
+
 // 縦 1:N
 void AveragingReducer::Process_Ratio1NX(ILineAveragingReducer& lineReducer, uint16_t part)
 {
@@ -1518,13 +1529,8 @@ void AveragingReducer::Process_Ratio1NX(ILineAveragingReducer& lineReducer, uint
 	
 	for (uint16_t y=yStart; y<yEnd; ++y) {
 		// 最初のライン set to temp
-		lineReducer.fillRead(srcLine, tmpBuff);
-		OffsetPtr(srcLine, params.srcLineOffsetBytes);
 		// 次のラインから最後の前のラインまで plusEqual to temp
-		for (uint16_t i=0; i<params.heightRatioSource-1u; ++i) {
-			lineReducer.addRead(srcLine, tmpBuff);
-			OffsetPtr(srcLine, params.srcLineOffsetBytes);
-		}
+		Read(lineReducer, srcLine, tmpBuff, params.srcLineOffsetBytes, params.heightRatioSource-1u);
 		// store
 		for (uint16_t x=0; x<xLoopCount; ++x) {
 			__m128i p0 = tmpBuff[x*2+0];
@@ -1584,12 +1590,7 @@ void AveragingReducer::Process_RatioAny(ILineAveragingReducer& lineReducer, uint
 			// head
 			if (bodyStart == 0) {
 				// head + body
-				lineReducer.fillRead(pSrc, tmpBuffBody);
-				OffsetPtr(pSrc, params.srcLineOffsetBytes);
-				for (uint16_t i=0; i<endBodyCnt; ++i) {
-					lineReducer.addRead(pSrc, tmpBuffBody);
-					OffsetPtr(pSrc, params.srcLineOffsetBytes);
-				}
+				Read(lineReducer, pSrc, tmpBuffBody, params.srcLineOffsetBytes, endBodyCnt);
 				// srcRatio data straddles targetRatio's tail and next head
 				lineReducer.fillRead(pSrc, tmpBuffHead);
 				OffsetPtr(pSrc, params.srcLineOffsetBytes);
@@ -1633,12 +1634,7 @@ void AveragingReducer::Process_RatioAny(ILineAveragingReducer& lineReducer, uint
 				for (uint16_t i=bodyStart; i<bodyEnd; ++i) {
 					// body
 					if (innerBodyCnt) {
-						lineReducer.fillRead(pSrc, tmpBuffBody);
-						OffsetPtr(pSrc, params.srcLineOffsetBytes);
-						for (uint16_t j=0; j<innerBodyCnt-1u; ++j) {
-							lineReducer.addRead(pSrc, tmpBuffBody);
-							OffsetPtr(pSrc, params.srcLineOffsetBytes);
-						}
+						Read(lineReducer, pSrc, tmpBuffBody, params.srcLineOffsetBytes, innerBodyCnt-1u);
 						// tail and next head
 						lineReducer.fillRead(pSrc, tmpBuffTail);
 						OffsetPtr(pSrc, params.srcLineOffsetBytes);
@@ -1662,12 +1658,7 @@ void AveragingReducer::Process_RatioAny(ILineAveragingReducer& lineReducer, uint
 			// tail
 			if (bodyEnd == bodyCount) {
 				// body + tail
-				lineReducer.fillRead(pSrc, tmpBuffBody);
-				OffsetPtr(pSrc, params.srcLineOffsetBytes);
-				for (uint16_t i=0; i<endBodyCnt; ++i) {
-					lineReducer.addRead(pSrc, tmpBuffBody);
-					OffsetPtr(pSrc, params.srcLineOffsetBytes);
-				}
+				Read(lineReducer, pSrc, tmpBuffBody, params.srcLineOffsetBytes, endBodyCnt);
 				StoreToTarget(storeCount, pTarget, tmpBuffBody, tmpBuffHead, headRatio, targetRatio, hvTargetSrcRatio);
 				OffsetPtr(pTarget, params.targetLineOffsetBytes);
 			}
@@ -1686,12 +1677,7 @@ void AveragingReducer::Process_RatioAny(ILineAveragingReducer& lineReducer, uint
 			// head
 			{
 				// head + body
-				lineReducer.fillRead(pSrc, tmpBuffBody);
-				OffsetPtr(pSrc, params.srcLineOffsetBytes);
-				for (uint16_t i=0; i<endBodyCnt; ++i) {
-					lineReducer.addRead(pSrc, tmpBuffBody);
-					OffsetPtr(pSrc, params.srcLineOffsetBytes);
-				}
+				Read(lineReducer, pSrc, tmpBuffBody, params.srcLineOffsetBytes, endBodyCnt);
 				// srcRatio data straddles targetRatio's tail and next head
 				lineReducer.fillRead(pSrc, tmpBuffHead);
 				OffsetPtr(pSrc, params.srcLineOffsetBytes);
@@ -1708,12 +1694,7 @@ void AveragingReducer::Process_RatioAny(ILineAveragingReducer& lineReducer, uint
 				for (uint16_t i=0; i<bodyCount; ++i) {
 					// body
 					if (innerBodyCnt) {
-						lineReducer.fillRead(pSrc, tmpBuffBody);
-						OffsetPtr(pSrc, params.srcLineOffsetBytes);
-						for (uint16_t j=0; j<innerBodyCnt-1u; ++j) {
-							lineReducer.addRead(pSrc, tmpBuffBody);
-							OffsetPtr(pSrc, params.srcLineOffsetBytes);
-						}
+						Read(lineReducer, pSrc, tmpBuffBody, params.srcLineOffsetBytes, innerBodyCnt-1u);
 						// tail and next head
 						lineReducer.fillRead(pSrc, tmpBuffTail);
 						OffsetPtr(pSrc, params.srcLineOffsetBytes);
@@ -1738,12 +1719,7 @@ void AveragingReducer::Process_RatioAny(ILineAveragingReducer& lineReducer, uint
 			// tail
 			{
 				// body + tail
-				lineReducer.fillRead(pSrc, tmpBuffBody);
-				OffsetPtr(pSrc, params.srcLineOffsetBytes);
-				for (uint16_t i=0; i<endBodyCnt; ++i) {
-					lineReducer.addRead(pSrc, tmpBuffBody);
-					OffsetPtr(pSrc, params.srcLineOffsetBytes);
-				}
+				Read(lineReducer, pSrc, tmpBuffBody, params.srcLineOffsetBytes, endBodyCnt);
 				StoreToTarget(storeCount, pTarget, tmpBuffBody, tmpBuffHead, headRatio, targetRatio, hvTargetSrcRatio);
 				OffsetPtr(pTarget, params.targetLineOffsetBytes);
 			}

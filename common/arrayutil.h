@@ -23,7 +23,7 @@ inline size_t Count(const T& arr)
 
 
 template <typename T>
-__forceinline void OffsetPtr(T*& ptr, int offsetBytes)
+__forceinline void OffsetPtr(T*& ptr, ptrdiff_t offsetBytes)
 {
 	ptr = (T*) ((const char*)ptr + offsetBytes);
 }
