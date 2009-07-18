@@ -670,6 +670,24 @@ public:
 	}
 };
 
+class CollectSumAndNext1_1
+{
+public:
+	__forceinline static void work(const __m128i* pSrc, const uint8_t count, __m128i& sum, __m128i& one)
+	{
+		switch (count) {
+		case 0:
+			one = _mm_unpacklo_epi8(_mm_cvtsi32_si128(*(const int*)pSrc), _mm_setzero_si128());
+			break;
+		case 1:
+	//		sum = _mm_cvtepu8_epi16(_mm_loadl_epi64(pSrc));
+			sum = _mm_unpacklo_epi8(_mm_loadl_epi64(pSrc), _mm_setzero_si128());
+			one = _mm_srli_si128(sum, 8);
+			break;
+		}
+	}
+};
+
 class CollectSumAndNext1_2
 {
 public:
@@ -715,6 +733,67 @@ public:
 	}
 };
 
+class CollectSumAndNext1_4
+{
+public:
+	__forceinline static void work(const __m128i* pSrc, const uint8_t count, __m128i& sum, __m128i& one)
+	{
+		switch (count) {
+		case 3:
+			sum = Split_3_1(load_unaligned_128(pSrc));
+			one = _mm_srli_si128(sum, 8);
+			break;
+		case 4:
+			sum = CollectSum_4(pSrc);
+			++pSrc;
+			one = _mm_unpacklo_epi8(_mm_cvtsi32_si128(*(const int*)pSrc), _mm_setzero_si128());
+			break;
+		}
+	}
+};
+
+class CollectSumAndNext1_X
+{
+public:
+	__forceinline static void work(const __m128i* pSrc, const uint16_t count, __m128i& sum, __m128i& one)
+	{
+		sum = CollectSum_4(pSrc);
+		++pSrc;
+		const uint16_t n4 = count >> 2;
+		for (uint16_t i=1; i<n4; ++i) {
+			sum = _mm_adds_epu16(sum, CollectSum_4(pSrc));
+			++pSrc;
+		}
+		switch (count & 0x03) {
+		case 0:
+			one = _mm_unpacklo_epi8(_mm_cvtsi32_si128(*(const int*)pSrc), _mm_setzero_si128());
+			break;
+		case 1:
+			{
+				__m128i plus = _mm_unpacklo_epi8(_mm_loadl_epi64(pSrc), _mm_setzero_si128());
+				sum = _mm_adds_epu16(sum, plus);
+				one = _mm_srli_si128(plus, 8);
+			}
+			break;
+		case 2:
+			{
+				__m128i src = load_unaligned_128(pSrc);
+				__m128i twoPixels0 = _mm_unpacklo_epi8(src, _mm_setzero_si128());
+				__m128i plus = _mm_add_epi16(twoPixels0, _mm_srli_si128(twoPixels0, 8));
+				sum = _mm_adds_epu16(sum, plus);
+				one = _mm_unpackhi_epi8(src, _mm_setzero_si128());
+			}
+			break;
+		case 3:
+			{
+				__m128i plus = Split_3_1(load_unaligned_128(pSrc));
+				sum = _mm_adds_epu16(sum, plus);
+				one = _mm_srli_si128(plus, 8);
+			}
+			break;
+		}
+	}
+};
 
 class LineAveragingReducer_RatioAny_Basic : public LineAveragingReducer_RatioAny_Base
 {
@@ -867,14 +946,20 @@ public:
 	__forceinline void iterate(const __m128i* srcBuff, __m128i* tmpBuff)
 	{
 		switch (maxBodyCount) {
+		case 4:
+			iterate2<T, CollectSumAndNext1_4>(srcBuff, tmpBuff);
+			break;
 		case 3:
 			iterate2<T, CollectSumAndNext1_3>(srcBuff, tmpBuff);
 			break;
 		case 2:
 			iterate2<T, CollectSumAndNext1_2>(srcBuff, tmpBuff);
 			break;
+		case 1:
+			iterate2<T, CollectSumAndNext1_1>(srcBuff, tmpBuff);
+			break;
 		default:
-			iterate2<T, CollectSumAndNext1>(srcBuff, tmpBuff);
+			iterate2<T, CollectSumAndNext1_X>(srcBuff, tmpBuff);
 			break;
 		}
 	}
