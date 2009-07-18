@@ -670,7 +670,7 @@ public:
 	}
 };
 
-class CollectSumAndNext1_Small
+class CollectSumAndNext1_2
 {
 public:
 	__forceinline static void work(const __m128i* pSrc, const uint8_t count, __m128i& sum, __m128i& one)
@@ -689,6 +689,24 @@ public:
 				one = _mm_unpackhi_epi8(src, _mm_setzero_si128());
 			}
 			break;
+		}
+	}
+};
+
+class CollectSumAndNext1_3
+{
+public:
+	__forceinline static void work(const __m128i* pSrc, const uint8_t count, __m128i& sum, __m128i& one)
+	{
+		switch (count) {
+		case 2:
+			{
+				__m128i src = load_unaligned_128(pSrc);
+				__m128i twoPixels0 = _mm_unpacklo_epi8(src, _mm_setzero_si128());
+				sum = _mm_add_epi16(twoPixels0, _mm_srli_si128(twoPixels0, 8));
+				one = _mm_unpackhi_epi8(src, _mm_setzero_si128());
+			}
+			break;
 		case 3:
 			sum = Split_3_1(load_unaligned_128(pSrc));
 			one = _mm_srli_si128(sum, 8);
@@ -696,6 +714,7 @@ public:
 		}
 	}
 };
+
 
 class LineAveragingReducer_RatioAny_Basic : public LineAveragingReducer_RatioAny_Base
 {
@@ -847,10 +866,16 @@ public:
 	template <typename T>
 	__forceinline void iterate(const __m128i* srcBuff, __m128i* tmpBuff)
 	{
-		if (maxBodyCount < 4) {
-			iterate2<T, CollectSumAndNext1_Small>(srcBuff, tmpBuff);
-		}else {
+		switch (maxBodyCount) {
+		case 3:
+			iterate2<T, CollectSumAndNext1_3>(srcBuff, tmpBuff);
+			break;
+		case 2:
+			iterate2<T, CollectSumAndNext1_2>(srcBuff, tmpBuff);
+			break;
+		default:
 			iterate2<T, CollectSumAndNext1>(srcBuff, tmpBuff);
+			break;
 		}
 	}
 
@@ -885,7 +910,7 @@ public:
 			// head
 			{
 				__m128i col;
-				CollectSumAndNext1_Small::work(pSrc, 1, col, col2);
+				CollectSumAndNext1_2::work(pSrc, 1, col, col2);
 				OffsetPtr(pSrc, 8);
 				// srcRatio data straddles targetRatio's tail and next head
 				__m128i col2a = _mm_mulhi_epu16(col2, remainderDividedByTargetRatio);
