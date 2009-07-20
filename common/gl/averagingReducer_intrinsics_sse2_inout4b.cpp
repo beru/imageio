@@ -175,8 +175,6 @@ public:
 // out	128bits * 1
 __forceinline __m128i Scale2(const __m128i* pSrc)
 {
-	__m128i fourPixels0 = pSrc[0];
-
 /*
 	12345678abcdefgh
 	↓
@@ -186,6 +184,7 @@ __forceinline __m128i Scale2(const __m128i* pSrc)
 	        +
 	 5 6 7 8 e f g h
 */
+	__m128i fourPixels0 = pSrc[0];
 	__m128i shuffled0 = _mm_shuffle_epi32(fourPixels0, _MM_SHUFFLE(3, 1, 2, 0));
 	__m128i twoPixels00 = _mm_unpacklo_epi8(shuffled0, _mm_setzero_si128());
 	__m128i twoPixels01 = _mm_unpackhi_epi8(shuffled0, _mm_setzero_si128());
@@ -675,15 +674,12 @@ class CollectSumAndNext1_1
 public:
 	__forceinline static void work(const __m128i* pSrc, const uint8_t count, __m128i& sum, __m128i& one)
 	{
-		switch (count) {
-		case 0:
-			one = _mm_unpacklo_epi8(_mm_cvtsi32_si128(*(const int*)pSrc), _mm_setzero_si128());
-			break;
-		case 1:
+		if (count == 1) {
 	//		sum = _mm_cvtepu8_epi16(_mm_loadl_epi64(pSrc));
 			sum = _mm_unpacklo_epi8(_mm_loadl_epi64(pSrc), _mm_setzero_si128());
 			one = _mm_srli_si128(sum, 8);
-			break;
+		}else {
+			one = _mm_unpacklo_epi8(_mm_cvtsi32_si128(*(const int*)pSrc), _mm_setzero_si128());
 		}
 	}
 };
@@ -693,20 +689,15 @@ class CollectSumAndNext1_2
 public:
 	__forceinline static void work(const __m128i* pSrc, const uint8_t count, __m128i& sum, __m128i& one)
 	{
-		switch (count) {
-		case 1:
+		if (count == 2) {
+			__m128i src = load_unaligned_128(pSrc);
+			__m128i twoPixels0 = _mm_unpacklo_epi8(src, _mm_setzero_si128());
+			sum = _mm_add_epi16(twoPixels0, _mm_srli_si128(twoPixels0, 8));
+			one = _mm_unpackhi_epi8(src, _mm_setzero_si128());
+		}else {
 	//		sum = _mm_cvtepu8_epi16(_mm_loadl_epi64(pSrc));
 			sum = _mm_unpacklo_epi8(_mm_loadl_epi64(pSrc), _mm_setzero_si128());
 			one = _mm_srli_si128(sum, 8);
-			break;
-		case 2:
-			{
-				__m128i src = load_unaligned_128(pSrc);
-				__m128i twoPixels0 = _mm_unpacklo_epi8(src, _mm_setzero_si128());
-				sum = _mm_add_epi16(twoPixels0, _mm_srli_si128(twoPixels0, 8));
-				one = _mm_unpackhi_epi8(src, _mm_setzero_si128());
-			}
-			break;
 		}
 	}
 };
@@ -716,19 +707,14 @@ class CollectSumAndNext1_3
 public:
 	__forceinline static void work(const __m128i* pSrc, const uint8_t count, __m128i& sum, __m128i& one)
 	{
-		switch (count) {
-		case 2:
-			{
-				__m128i src = load_unaligned_128(pSrc);
-				__m128i twoPixels0 = _mm_unpacklo_epi8(src, _mm_setzero_si128());
-				sum = _mm_add_epi16(twoPixels0, _mm_srli_si128(twoPixels0, 8));
-				one = _mm_unpackhi_epi8(src, _mm_setzero_si128());
-			}
-			break;
-		case 3:
+		if (count == 3) {
 			sum = Split_3_1(load_unaligned_128(pSrc));
 			one = _mm_srli_si128(sum, 8);
-			break;
+		}else {
+			__m128i src = load_unaligned_128(pSrc);
+			__m128i twoPixels0 = _mm_unpacklo_epi8(src, _mm_setzero_si128());
+			sum = _mm_add_epi16(twoPixels0, _mm_srli_si128(twoPixels0, 8));
+			one = _mm_unpackhi_epi8(src, _mm_setzero_si128());
 		}
 	}
 };
@@ -738,16 +724,13 @@ class CollectSumAndNext1_4
 public:
 	__forceinline static void work(const __m128i* pSrc, const uint8_t count, __m128i& sum, __m128i& one)
 	{
-		switch (count) {
-		case 3:
-			sum = Split_3_1(load_unaligned_128(pSrc));
-			one = _mm_srli_si128(sum, 8);
-			break;
-		case 4:
+		if (count == 4) {
 			sum = CollectSum_4(pSrc);
 			++pSrc;
 			one = _mm_unpacklo_epi8(_mm_cvtsi32_si128(*(const int*)pSrc), _mm_setzero_si128());
-			break;
+		}else {
+			sum = Split_3_1(load_unaligned_128(pSrc));
+			one = _mm_srli_si128(sum, 8);
 		}
 	}
 };
@@ -1011,10 +994,10 @@ public:
 				const uint16_t* pIntBodyCounts = (const uint16_t*) pBodyCounts;
 				const uint32_t* pIntTailTargetRatios = (const uint32_t*) pTailTargetRatios;
 				for (uint16_t i=0; i<loopCount; ++i) {
-					const __m128i ratiosOrg = _mm_cvtsi32_si128(pIntTailTargetRatios[i]);
+					const __m128i ratiosOrg = _mm_cvtsi32_si128(*pIntTailTargetRatios++);
 					const __m128i ratiosTmp = _mm_shufflelo_epi16(ratiosOrg, _MM_SHUFFLE(1,1,0,0));
 					const __m128i ratios = _mm_shuffle_epi32(ratiosTmp, _MM_SHUFFLE(1,1,0,0));
-					const uint16_t bodyCountPair = pIntBodyCounts[i];
+					const uint16_t bodyCountPair = *pIntBodyCounts++;
 					switch (bodyCountPair) {
 					case 0:
 						{
