@@ -398,9 +398,10 @@ bool CImageView::render(CSize sz)
 				if (m_threadsToUse == 1) {
 					reducer.Process(0);
 				}else {
-					Caller<gl::intrinsics_sse2_inout4b::AveragingReducerCaller> caller(reducer);
+					typedef Caller<gl::intrinsics_sse2_inout4b::AveragingReducerCaller> AveragingReducerCaller;
+					AveragingReducerCaller caller(reducer);
 					for (size_t i=0; i<m_threadsToUse; ++i) {
-						m_pThreadPool->SetSlot(i, Caller<gl::intrinsics_sse2_inout4b::AveragingReducerCaller>::StaticCall, &caller);
+						m_pThreadPool->SetSlot(i, AveragingReducerCaller::StaticCall, &caller);
 					}
 					m_pThreadPool->ExecJobs();
 					bool ret = m_pThreadPool->WaitJobs(1000);

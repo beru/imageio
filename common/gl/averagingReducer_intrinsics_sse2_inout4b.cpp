@@ -497,101 +497,12 @@ __forceinline __m128i CollectSum(const __m128i* pSrc, const uint16_t count)
 	}
 }
 
-class LineAveragingReducer_Ratio_2_3 : public ILineAveragingReducer
-{
-public:
-	ILineAveragingReducer_Impl;
-	
-	template <typename T>
-	__forceinline void iterate(const __m128i* srcBuff, __m128i* tmpBuff)
-	{
-		const __m128i* pSrc = srcBuff;
-		__m128i* pTmp = tmpBuff;
-		
-		const uint16_t loopLen = srcWidth / 12;
-		const uint16_t remain = srcWidth % 12;
-		
-		// read 12 pixels write 8 pixels per loop
-		for (uint16_t i=0; i<loopLen; ++i) {
-			__m128i sp0123 = pSrc[0];
-			__m128i sp01 = _mm_unpacklo_epi8(sp0123, _mm_setzero_si128());
-			__m128i sp23 = _mm_unpackhi_epi8(sp0123, _mm_setzero_si128());
-			__m128i sp1 = _mm_srli_si128(sp01, 8);
-			__m128i sp1half = _mm_srli_epi16(sp1, 1);
-			__m128i sp1rest = _mm_sub_epi16(sp1, sp1half);
-			__m128i tp0 = _mm_add_epi16(sp01, sp1half);
-			__m128i tp1 = _mm_add_epi16(sp1rest, sp23);
-			pTmp[0] = T::work(pTmp[0], _mm_unpacklo_epi64(tp0, tp1));
-
-			__m128i sp4567 = pSrc[1];
-			__m128i sp45 = _mm_unpacklo_epi8(sp4567, _mm_setzero_si128());
-			__m128i sp4 = _mm_slli_si128(sp45, 8);
-			__m128i sp4half = _mm_srli_epi16(sp4, 1);
-			__m128i sp4rest = _mm_sub_epi16(sp4, sp4half);
-			__m128i tp2 = _mm_add_epi16(sp23, sp4half);
-			__m128i tp3 = _mm_add_epi16(sp4rest, sp45);
-			pTmp[1] = T::work(pTmp[1], _mm_unpackhi_epi64(tp2, tp3));
-			
-			__m128i sp89ab = pSrc[2];
-			__m128i sp67 = _mm_unpackhi_epi8(sp4567, _mm_setzero_si128());
-			__m128i sp89 = _mm_unpacklo_epi8(sp89ab, _mm_setzero_si128());
-			__m128i sp7 = _mm_srli_si128(sp67, 8);
-			__m128i sp7half = _mm_srli_epi16(sp7, 1);
-			__m128i sp7rest = _mm_sub_epi16(sp7, sp7half);
-			__m128i tp4 = _mm_add_epi16(sp67, sp7half);
-			__m128i tp5 = _mm_add_epi16(sp7rest, sp89);
-			pTmp[2] = T::work(pTmp[2], _mm_unpacklo_epi64(tp4, tp5));
-			
-			__m128i spab = _mm_unpackhi_epi8(sp89ab, _mm_setzero_si128());
-			__m128i spa = _mm_slli_si128(spab, 8);
-			__m128i spahalf = _mm_srli_epi16(spa, 1);
-			__m128i sparest = _mm_sub_epi16(spa, spahalf);
-			__m128i tp6 = _mm_add_epi16(sp89, spahalf);
-			__m128i tp7 = _mm_add_epi16(sparest, spab);
-			pTmp[3] = T::work(pTmp[3], _mm_unpackhi_epi64(tp6, tp7));
-
-			pSrc += 3;
-			pTmp += 4;
-		}
-		
-		const uint16_t remainLoopLen = remain / 3;
-		const uint16_t remainRemain = remain % 3;
-
-		// read 3 pixels write 2 pixels per loop
-		for (uint16_t i=0; i<remainLoopLen; ++i) {
-			__m128i sp01 = _mm_unpacklo_epi8(_mm_loadl_epi64(pSrc), _mm_setzero_si128());
-			OffsetPtr(pSrc, 8);
-			__m128i sp23 = _mm_unpacklo_epi8(_mm_loadl_epi64(pSrc), _mm_setzero_si128());
-			OffsetPtr(pSrc, 4);
-			__m128i sp1 = _mm_srli_si128(sp01, 8);
-			__m128i sp1half = _mm_srli_epi16(sp1, 1);
-			__m128i sp1rest = _mm_sub_epi16(sp1, sp1half);
-			__m128i tp0 = _mm_add_epi16(sp01, sp1half);
-			__m128i tp1 = _mm_add_epi16(sp1rest, sp23);
-			_mm_storeu_si128(pTmp, T::work(_mm_loadu_si128(pTmp), _mm_unpacklo_epi64(tp0, tp1)));
-
-		}
-
-	}
-	
-	uint16_t srcWidth;
-};
-
 class LineAveragingReducer_RatioAny_Base : public ILineAveragingReducer
 {
 public:
-	LineAveragingReducer_RatioAny_Base(const uint8_t* pBodyCounts, const uint16_t* pTailTargetRatios)
-		:
-		pBodyCounts(pBodyCounts),
-		pTailTargetRatios(pTailTargetRatios)
-	{
-	}
-	
 	uint16_t targetRatio_;
 	uint16_t srcRatio_;
 	uint16_t srcWidth_;
-	const uint8_t* pBodyCounts;
-	const uint16_t* pTailTargetRatios;
 };
 
 __forceinline __m128i set1_epi16_low(int v)
@@ -672,14 +583,16 @@ public:
 class CollectSumAndNext1_1
 {
 public:
-	__forceinline static void work(const __m128i* pSrc, const uint8_t count, __m128i& sum, __m128i& one)
+	__forceinline static void work(const __m128i*& pSrc, const uint8_t base, const uint8_t is1, __m128i& sum, __m128i& one)
 	{
-		if (count == 1) {
+		if (is1) {
 	//		sum = _mm_cvtepu8_epi16(_mm_loadl_epi64(pSrc));
 			sum = _mm_unpacklo_epi8(_mm_loadl_epi64(pSrc), _mm_setzero_si128());
 			one = _mm_srli_si128(sum, 8);
+			OffsetPtr(pSrc, 8);
 		}else {
 			one = _mm_unpacklo_epi8(_mm_cvtsi32_si128(*(const int*)pSrc), _mm_setzero_si128());
+			OffsetPtr(pSrc, 4);
 		}
 	}
 };
@@ -687,17 +600,19 @@ public:
 class CollectSumAndNext1_2
 {
 public:
-	__forceinline static void work(const __m128i* pSrc, const uint8_t count, __m128i& sum, __m128i& one)
+	__forceinline static void work(const __m128i*& pSrc, const uint8_t base, const uint8_t is2, __m128i& sum, __m128i& one)
 	{
-		if (count == 2) {
+		if (is2) {
 			__m128i src = load_unaligned_128(pSrc);
 			__m128i twoPixels0 = _mm_unpacklo_epi8(src, _mm_setzero_si128());
 			sum = _mm_add_epi16(twoPixels0, _mm_srli_si128(twoPixels0, 8));
 			one = _mm_unpackhi_epi8(src, _mm_setzero_si128());
+			OffsetPtr(pSrc, 12);
 		}else {
 	//		sum = _mm_cvtepu8_epi16(_mm_loadl_epi64(pSrc));
 			sum = _mm_unpacklo_epi8(_mm_loadl_epi64(pSrc), _mm_setzero_si128());
 			one = _mm_srli_si128(sum, 8);
+			OffsetPtr(pSrc, 8);
 		}
 	}
 };
@@ -705,16 +620,18 @@ public:
 class CollectSumAndNext1_3
 {
 public:
-	__forceinline static void work(const __m128i* pSrc, const uint8_t count, __m128i& sum, __m128i& one)
+	__forceinline static void work(const __m128i*& pSrc, const uint8_t base, const uint8_t is3, __m128i& sum, __m128i& one)
 	{
-		if (count == 3) {
-			sum = Split_3_1(load_unaligned_128(pSrc));
+		__m128i src = load_unaligned_128(pSrc);
+		if (is3) {
+			sum = Split_3_1(src);
 			one = _mm_srli_si128(sum, 8);
+			OffsetPtr(pSrc, 16);
 		}else {
-			__m128i src = load_unaligned_128(pSrc);
 			__m128i twoPixels0 = _mm_unpacklo_epi8(src, _mm_setzero_si128());
 			sum = _mm_add_epi16(twoPixels0, _mm_srli_si128(twoPixels0, 8));
 			one = _mm_unpackhi_epi8(src, _mm_setzero_si128());
+			OffsetPtr(pSrc, 12);
 		}
 	}
 };
@@ -722,15 +639,17 @@ public:
 class CollectSumAndNext1_4
 {
 public:
-	__forceinline static void work(const __m128i* pSrc, const uint8_t count, __m128i& sum, __m128i& one)
+	__forceinline static void work(const __m128i*& pSrc, const uint8_t base, const uint8_t is4, __m128i& sum, __m128i& one)
 	{
-		if (count == 4) {
+		if (is4) {
 			sum = CollectSum_4(pSrc);
 			++pSrc;
 			one = _mm_unpacklo_epi8(_mm_cvtsi32_si128(*(const int*)pSrc), _mm_setzero_si128());
+			OffsetPtr(pSrc, 4);
 		}else {
 			sum = Split_3_1(load_unaligned_128(pSrc));
 			one = _mm_srli_si128(sum, 8);
+			++pSrc;
 		}
 	}
 };
@@ -738,8 +657,9 @@ public:
 class CollectSumAndNext1_X
 {
 public:
-	__forceinline static void work(const __m128i* pSrc, const uint16_t count, __m128i& sum, __m128i& one)
+	__forceinline static void work(const __m128i*& pSrc, const uint8_t base, const uint16_t bit, __m128i& sum, __m128i& one)
 	{
+		const uint16_t count = base + bit;
 		sum = CollectSum_4(pSrc);
 		++pSrc;
 		const uint16_t n4 = count >> 2;
@@ -750,12 +670,14 @@ public:
 		switch (count & 0x03) {
 		case 0:
 			one = _mm_unpacklo_epi8(_mm_cvtsi32_si128(*(const int*)pSrc), _mm_setzero_si128());
+			OffsetPtr(pSrc, 4);
 			break;
 		case 1:
 			{
 				__m128i plus = _mm_unpacklo_epi8(_mm_loadl_epi64(pSrc), _mm_setzero_si128());
 				sum = _mm_adds_epu16(sum, plus);
 				one = _mm_srli_si128(plus, 8);
+				OffsetPtr(pSrc, 8);
 			}
 			break;
 		case 2:
@@ -765,6 +687,7 @@ public:
 				__m128i plus = _mm_add_epi16(twoPixels0, _mm_srli_si128(twoPixels0, 8));
 				sum = _mm_adds_epu16(sum, plus);
 				one = _mm_unpackhi_epi8(src, _mm_setzero_si128());
+				OffsetPtr(pSrc, 12);
 			}
 			break;
 		case 3:
@@ -772,6 +695,7 @@ public:
 				__m128i plus = Split_3_1(load_unaligned_128(pSrc));
 				sum = _mm_adds_epu16(sum, plus);
 				one = _mm_srli_si128(plus, 8);
+				OffsetPtr(pSrc, 16);
 			}
 			break;
 		}
@@ -780,16 +704,21 @@ public:
 
 class LineAveragingReducer_RatioAny_Basic : public LineAveragingReducer_RatioAny_Base
 {
+private:
+	const uint32_t* pBodyCountBits_;
+	const uint16_t* pTailTargetRatios_;
+
 public:
 	ILineAveragingReducer_Impl;
 	uint8_t maxBodyCount;
 
-	LineAveragingReducer_RatioAny_Basic(const uint8_t* pBodyCounts, const uint16_t* pTailTargetRatios)
+	LineAveragingReducer_RatioAny_Basic(const uint32_t* pBodyCountBits, const uint16_t* pTailTargetRatios)
 		:
-		LineAveragingReducer_RatioAny_Base(pBodyCounts, pTailTargetRatios)
+		pBodyCountBits_(pBodyCountBits),
+		pTailTargetRatios_(pTailTargetRatios)
 	{
 	}
-
+	
 	template <typename T, typename CollectSumAndNext1T>
 	void iterate2(const __m128i* srcBuff, __m128i* tmpBuff)
 	{
@@ -821,98 +750,98 @@ public:
 			// body
 			{
 				const uint16_t bodyLoopCount = targetRatio - 2;
-#if 0
-				// loop unrolled version
-				const uint16_t loopCount = bodyLoopCount / 4;
-				const uint16_t remain = bodyLoopCount % 4;
-				const uint32_t* pIntBodyCounts = (const uint32_t*) pBodyCounts;
-				const __m128i* pVecTailTargetRatios = (const __m128i*)pTailTargetRatios;
-				for (uint16_t i=0; i<loopCount; ++i) {
-					const uint32_t bodyCounts = pIntBodyCounts[i];
-					__m128i tailTargetRatios = _mm_loadl_epi64(pVecTailTargetRatios);
-					OffsetPtr(pVecTailTargetRatios, 8);
-					__m128i collected;
-					uint8_t bodyCount;
-					__m128i tailTargetRatio;
-					__m128i col = col2;
-					__m128i col2a;
+				const uint16_t bodyLoopCountQuotient = bodyLoopCount / 32;
+				const uint16_t bodyLoopCountRemainder = bodyLoopCount % 32;
+				const uint32_t* pWorkBodyCountBits = pBodyCountBits_;
+				const uint16_t* pWorkTailTargetRatios = pTailTargetRatios_;
+				const uint16_t bodyCountBase = maxBodyCount - 1;
+				for (uint16_t i=0; i<bodyLoopCountQuotient; ++i) {
+					uint32_t bodyCountBits = *pWorkBodyCountBits++;
+#if 1
+					// loop unrolled version
+					for (uint16_t j=0; j<32/4; ++j) {
+						__m128i tailTargetRatios = _mm_loadl_epi64((const __m128i*)pWorkTailTargetRatios);
+						OffsetPtr(pWorkTailTargetRatios, 8);
+						__m128i collected;
+						uint8_t bodyCount;
+						__m128i tailTargetRatio;
+						__m128i col = col2;
+						__m128i col2a;
 
-					/// 1
-					bodyCount = bodyCounts & 0xFF;
-					tailTargetRatio = _mm_shufflelo_epi16(tailTargetRatios, _MM_SHUFFLE(0,0,0,0));
-					CollectSumAndNext1T::work(pSrc, bodyCount, collected, col2);
-					OffsetPtr(pSrc, (bodyCount+1) * 4);
-					col = _mm_add_epi16(col, collected);
-					col2a = _mm_mulhi_epu16(col2, tailTargetRatio);	// col2 * tail/target
-					col = _mm_add_epi16(col, col2a);
-					_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), col));
-					OffsetPtr(pTmp, 8);
-					col = _mm_sub_epi16(col2, col2a);
-					/// 2
-					bodyCount = (bodyCounts >> 8) & 0xFF;
-					tailTargetRatio = _mm_shufflelo_epi16(tailTargetRatios, _MM_SHUFFLE(1,1,1,1));
-					CollectSumAndNext1T::work(pSrc, bodyCount, collected, col2);
-					OffsetPtr(pSrc, (bodyCount+1) * 4);
-					col = _mm_add_epi16(col, collected);
-					col2a = _mm_mulhi_epu16(col2, tailTargetRatio);	// col2 * tail/target
-					col = _mm_add_epi16(col, col2a);
-					_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), col));
-					OffsetPtr(pTmp, 8);
-					col = _mm_sub_epi16(col2, col2a);
-					/// 3
-					bodyCount = (bodyCounts >> 16) & 0xFF;
-					tailTargetRatio = _mm_shufflelo_epi16(tailTargetRatios, _MM_SHUFFLE(2,2,2,2));
-					CollectSumAndNext1T::work(pSrc, bodyCount, collected, col2);
-					OffsetPtr(pSrc, (bodyCount+1) * 4);
-					col = _mm_add_epi16(col, collected);
-					col2a = _mm_mulhi_epu16(col2, tailTargetRatio);	// col2 * tail/target
-					col = _mm_add_epi16(col, col2a);
-					_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), col));
-					OffsetPtr(pTmp, 8);
-					col = _mm_sub_epi16(col2, col2a);
-					/// 4
-					bodyCount = bodyCounts >> 24;
-					tailTargetRatio = _mm_shufflelo_epi16(tailTargetRatios, _MM_SHUFFLE(3,3,3,3));
-					CollectSumAndNext1T::work(pSrc, bodyCount, collected, col2);
-					OffsetPtr(pSrc, (bodyCount+1) * 4);
-					col = _mm_add_epi16(col, collected);
-					col2a = _mm_mulhi_epu16(col2, tailTargetRatio);	// col2 * tail/target
-					col = _mm_add_epi16(col, col2a);
-					_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), col));
-					OffsetPtr(pTmp, 8);
-					col2 = _mm_sub_epi16(col2, col2a);
+						/// 1
+						tailTargetRatio = _mm_shufflelo_epi16(tailTargetRatios, _MM_SHUFFLE(0,0,0,0));
+						CollectSumAndNext1T::work(pSrc, bodyCountBase, bodyCountBits & 1, collected, col2);
+						bodyCountBits >>= 1;
+						col = _mm_add_epi16(col, collected);
+						col2a = _mm_mulhi_epu16(col2, tailTargetRatio);	// col2 * tail/target
+						col = _mm_add_epi16(col, col2a);
+						_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), col));
+						OffsetPtr(pTmp, 8);
+						col = _mm_sub_epi16(col2, col2a);
+						/// 2
+						tailTargetRatio = _mm_shufflelo_epi16(tailTargetRatios, _MM_SHUFFLE(1,1,1,1));
+						CollectSumAndNext1T::work(pSrc, bodyCountBase, bodyCountBits & 1, collected, col2);
+						bodyCountBits >>= 1;
+						col = _mm_add_epi16(col, collected);
+						col2a = _mm_mulhi_epu16(col2, tailTargetRatio);	// col2 * tail/target
+						col = _mm_add_epi16(col, col2a);
+						_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), col));
+						OffsetPtr(pTmp, 8);
+						col = _mm_sub_epi16(col2, col2a);
+						/// 3
+						tailTargetRatio = _mm_shufflelo_epi16(tailTargetRatios, _MM_SHUFFLE(2,2,2,2));
+						CollectSumAndNext1T::work(pSrc, bodyCountBase, bodyCountBits & 1, collected, col2);
+						bodyCountBits >>= 1;
+						col = _mm_add_epi16(col, collected);
+						col2a = _mm_mulhi_epu16(col2, tailTargetRatio);	// col2 * tail/target
+						col = _mm_add_epi16(col, col2a);
+						_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), col));
+						OffsetPtr(pTmp, 8);
+						col = _mm_sub_epi16(col2, col2a);
+						/// 4
+						tailTargetRatio = _mm_shufflelo_epi16(tailTargetRatios, _MM_SHUFFLE(3,3,3,3));
+						CollectSumAndNext1T::work(pSrc, bodyCountBase, bodyCountBits & 1, collected, col2);
+						bodyCountBits >>= 1;
+						col = _mm_add_epi16(col, collected);
+						col2a = _mm_mulhi_epu16(col2, tailTargetRatio);	// col2 * tail/target
+						col = _mm_add_epi16(col, col2a);
+						_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), col));
+						OffsetPtr(pTmp, 8);
+						col2 = _mm_sub_epi16(col2, col2a);
 
-				}
-				for (uint16_t i=0; i<remain; ++i) {
-					const uint16_t bodyCount = pBodyCounts[loopCount*4+i];
-					__m128i collected;
-					__m128i col = col2; // head
-					CollectSumAndNext1T::work(pSrc, bodyCount, collected, col2);
-					col = _mm_add_epi16(col, collected);
-					OffsetPtr(pSrc, (bodyCount+1) * 4);
-					__m128i tailTargetRatio = set1_epi16_low(pTailTargetRatios[loopCount*4+i]);
-					__m128i col2a = _mm_mulhi_epu16(col2, tailTargetRatio);	// col2 * tail/target
-					col = _mm_add_epi16(col, col2a);
-					_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), col));
-					OffsetPtr(pTmp, 8);
-					col2 = _mm_sub_epi16(col2, col2a);
-				}
+					}
 #else
-				for (uint16_t i=0; i<bodyLoopCount; ++i) {
-					const uint16_t bodyCount = pBodyCounts[i];
-					__m128i collected;
-					__m128i col = col2; // head
-					CollectSumAndNext1T::work(pSrc, bodyCount, collected, col2);
-					col = _mm_add_epi16(col, collected);
-					OffsetPtr(pSrc, (bodyCount+1) * 4);
-					__m128i tailTargetRatio = set1_epi16_low(pTailTargetRatios[i]);
-					__m128i col2a = _mm_mulhi_epu16(col2, tailTargetRatio);	// col2 * tail/target
-					col = _mm_add_epi16(col, col2a);
-					_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), col));
-					OffsetPtr(pTmp, 8);
-					col2 = _mm_sub_epi16(col2, col2a);
-				}
+					for (uint16_t j=0; j<32; ++j) {
+						__m128i collected;
+						__m128i col = col2; // head
+						CollectSumAndNext1T::work(pSrc, bodyCountBase, bodyCountBits & 1, collected, col2);
+						bodyCountBits >>= 1;
+						col = _mm_add_epi16(col, collected);
+						__m128i tailTargetRatio = set1_epi16_low(*pWorkTailTargetRatios++);
+						__m128i col2a = _mm_mulhi_epu16(col2, tailTargetRatio);	// col2 * tail/target
+						col = _mm_add_epi16(col, col2a);
+						_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), col));
+						OffsetPtr(pTmp, 8);
+						col2 = _mm_sub_epi16(col2, col2a);
+					}
 #endif
+				}
+				{
+					uint32_t bodyCountBits = *pWorkBodyCountBits;
+					for (uint16_t i=0; i<bodyLoopCountRemainder; ++i) {
+						__m128i collected;
+						__m128i col = col2; // head
+						CollectSumAndNext1T::work(pSrc, bodyCountBase, bodyCountBits & 1, collected, col2);
+						bodyCountBits >>= 1;
+						col = _mm_add_epi16(col, collected);
+						__m128i tailTargetRatio = set1_epi16_low(*pWorkTailTargetRatios++);
+						__m128i col2a = _mm_mulhi_epu16(col2, tailTargetRatio);	// col2 * tail/target
+						col = _mm_add_epi16(col, col2a);
+						_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), col));
+						OffsetPtr(pTmp, 8);
+						col2 = _mm_sub_epi16(col2, col2a);
+					}
+				}
 			}
 			// tail
 			{
@@ -951,12 +880,17 @@ public:
 
 class LineAveragingReducer_RatioAny_MoreThanHalf : public LineAveragingReducer_RatioAny_Base
 {
+private:
+	const uint8_t* pBodyCounts_;
+	const uint16_t* pTailTargetRatios_;
+
 public:
 	ILineAveragingReducer_Impl;
 
 	LineAveragingReducer_RatioAny_MoreThanHalf(const uint8_t* pBodyCounts, const uint16_t* pTailTargetRatios)
 		:
-		LineAveragingReducer_RatioAny_Base(pBodyCounts, pTailTargetRatios)
+		pBodyCounts_(pBodyCounts),
+		pTailTargetRatios_(pTailTargetRatios)
 	{
 	}
 	
@@ -978,8 +912,7 @@ public:
 			// head
 			{
 				__m128i col;
-				CollectSumAndNext1_2::work(pSrc, 1, col, col2);
-				OffsetPtr(pSrc, 8);
+				CollectSumAndNext1_2::work(pSrc, 1, 0, col, col2);
 				// srcRatio data straddles targetRatio's tail and next head
 				__m128i col2a = _mm_mulhi_epu16(col2, remainderDividedByTargetRatio);
 				col = _mm_add_epi16(col, col2a);
@@ -991,8 +924,8 @@ public:
 			{
 				const uint16_t limit = targetRatio - 2;
 				const uint16_t loopCount = limit >> 1;
-				const uint16_t* pIntBodyCounts = (const uint16_t*) pBodyCounts;
-				const uint32_t* pIntTailTargetRatios = (const uint32_t*) pTailTargetRatios;
+				const uint16_t* pIntBodyCounts = (const uint16_t*) pBodyCounts_;
+				const uint32_t* pIntTailTargetRatios = (const uint32_t*) pTailTargetRatios_;
 				for (uint16_t i=0; i<loopCount; ++i) {
 					const __m128i ratiosOrg = _mm_cvtsi32_si128(*pIntTailTargetRatios++);
 					const __m128i ratiosTmp = _mm_shufflelo_epi16(ratiosOrg, _MM_SHUFFLE(1,1,0,0));
@@ -1073,7 +1006,7 @@ public:
 					}
 				}
 				if (limit & 1) {
-					const uint8_t bodyCount = pBodyCounts[limit-1];
+					const uint8_t bodyCount = pBodyCounts_[limit-1];
 					__m128i col = col2; // head
 					col2 = _mm_unpacklo_epi8(_mm_loadl_epi64(pSrc), _mm_setzero_si128());
 					if (bodyCount) {
@@ -1081,7 +1014,7 @@ public:
 						col2 = _mm_srli_si128(col2, 8);
 					}
 					OffsetPtr(pSrc, (1+bodyCount)*4);
-					__m128i tailTargetRatio = set1_epi16_low(pTailTargetRatios[limit-1]);
+					__m128i tailTargetRatio = set1_epi16_low(pTailTargetRatios_[limit-1]);
 					__m128i col2a = _mm_mulhi_epu16(col2, tailTargetRatio);	// col2 * tail/target
 					col2 = _mm_sub_epi16(col2, col2a);
 					col = _mm_add_epi16(col, col2a);
@@ -1488,6 +1421,7 @@ public:
 private:
 	static uint16_t RatioAny_PreCalculate(
 		uint8_t* bodyCounts,
+		uint32_t* bodyCountBits,
 		uint8_t& maxBodyCount,
 		uint16_t* tailTargetRatios,
 		uint16_t srcRatio,
@@ -1510,6 +1444,25 @@ private:
 			maxBodyCount = std::max<uint8_t>(maxBodyCount, bodyCount);
 			tailTargetRatios[i] = (uint16_t)(invTargetRatio * tailRatio + 0.5);
 		}
+		{
+			const uint8_t* workBodyCounts = bodyCounts;
+			uint32_t* workBodyCountBits = bodyCountBits;
+			for (uint16_t i=0; i<limit/32; ++i) {
+				uint32_t& bodyCountBits = *workBodyCountBits++;
+				bodyCountBits = 0;
+				for (uint16_t j=0; j<32; ++j) {
+					bodyCountBits |= (*workBodyCounts++ == maxBodyCount) ? (1 << j) : 0;
+				}
+			}
+			{
+				uint32_t& bodyCountBits = *workBodyCountBits;
+				bodyCountBits = 0;
+				for (uint16_t i=0; i<limit%32; ++i) {
+					bodyCountBits |= (*workBodyCounts++ == maxBodyCount) ? (1 << i) : 0;
+				}
+			}
+		}
+
 #ifdef _DEBUG
 		static TCHAR buff[20480];
 		buff[0] = 0;
@@ -1526,31 +1479,32 @@ private:
 	void Process_Ratio1NX(ILineAveragingReducer& lineReducer, uint16_t part);
 	void Process_RatioAny(ILineAveragingReducer& lineReducer, uint16_t part);
 	
-	const AveragingReduceParams* pParams;
-	uint16_t parts;
+	const AveragingReduceParams* pParams_;
+	uint16_t parts_;
 	static const uint16_t TABLE_COUNT = 8192;
-	uint8_t bodyCounts[ TABLE_COUNT ];
-	uint16_t tailTargetRatios[ TABLE_COUNT ];
+	uint8_t bodyCounts_[ TABLE_COUNT ];
+	uint32_t bodyCountBits_[ TABLE_COUNT / 32 ];
+
+	uint16_t tailTargetRatios_[ TABLE_COUNT ];
 	
 	ILineAveragingReducer* pLineAveragingReducer;
 	LineAveragingReducer_Ratio1NX lar_Ratio1NX;
-	LineAveragingReducer_Ratio_2_3 lar_Ratio_2_3;
 	LineAveragingReducer_RatioAny_Basic lar_RatioAny_Basic;
 	LineAveragingReducer_RatioAny_MoreThanHalf lar_RatioAny_MoreThanHalf;
 };
 
 AveragingReducer::AveragingReducer()
 	:
-	lar_RatioAny_Basic(bodyCounts, tailTargetRatios),
-	lar_RatioAny_MoreThanHalf(bodyCounts, tailTargetRatios)
+	lar_RatioAny_Basic(bodyCountBits_, tailTargetRatios_),
+	lar_RatioAny_MoreThanHalf(bodyCounts_, tailTargetRatios_)
 {
 }
 
 void AveragingReducer::Setup(const AveragingReduceParams* pParams, uint16_t parts)
 {
 	assert(pParams);
-	this->pParams = pParams;
-	this->parts = parts;
+	this->pParams_ = pParams;
+	this->parts_ = parts;
 	
 	const AveragingReduceParams& params = *pParams;
 	//	assert((params.srcWidth % 4) == 0);
@@ -1565,12 +1519,16 @@ void AveragingReducer::Setup(const AveragingReduceParams* pParams, uint16_t part
 		lar_Ratio1NX.srcRatio_ = params.widthRatioSource;
 		lar_Ratio1NX.srcWidth_ = params.srcWidth;
 		pLineAveragingReducer = &lar_Ratio1NX;
-	}else if (params.widthRatioTarget == 2 && params.widthRatioSource == 3) {
-		lar_Ratio_2_3.srcWidth = params.srcWidth;
-		pLineAveragingReducer = &lar_Ratio_2_3;
 	}else {
 		uint8_t maxBodyCount;
-		RatioAny_PreCalculate(bodyCounts, maxBodyCount, tailTargetRatios, params.widthRatioSource, params.widthRatioTarget);
+		RatioAny_PreCalculate(
+			bodyCounts_,
+			bodyCountBits_,
+			maxBodyCount,
+			tailTargetRatios_,
+			params.widthRatioSource,
+			params.widthRatioTarget
+		);
 		if (params.widthRatioSource > params.widthRatioTarget * 2) {
 			lar_RatioAny_Basic.srcRatio_ = params.widthRatioSource;
 			lar_RatioAny_Basic.targetRatio_ = params.widthRatioTarget;
@@ -1600,9 +1558,9 @@ void Read(LineReducerT& lineReducer, const __m128i*& pSrc, __m128i* pTarget, ptr
 // 縦 1:N
 void AveragingReducer::Process_Ratio1NX(ILineAveragingReducer& lineReducer, uint16_t part)
 {
-	const AveragingReduceParams& params = *pParams;
+	const AveragingReduceParams& params = *pParams_;
 	
-	const uint32_t xLoopCount = getTargetLineArrayCount(*pParams);
+	const uint32_t xLoopCount = getTargetLineArrayCount(params);
 	const uint16_t yLoopCount = params.srcHeight / params.heightRatioSource;
 	__m128i* targetLine = params.targetBuff;
 	const __m128i* srcLine = params.srcBuff;
@@ -1612,7 +1570,7 @@ void AveragingReducer::Process_Ratio1NX(ILineAveragingReducer& lineReducer, uint
 	if (part >= yLoopCount) {
 		return;
 	}
-	const uint16_t useParts = min(parts, yLoopCount);
+	const uint16_t useParts = min(parts_, yLoopCount);
 	const uint16_t partLen = yLoopCount / useParts;
 	const uint16_t yStart = partLen * part;
 	const uint16_t yEnd = (part == useParts-1) ? yLoopCount : (yStart + partLen);
@@ -1643,7 +1601,7 @@ void AveragingReducer::Process_Ratio1NX(ILineAveragingReducer& lineReducer, uint
 // targetRatioが2の場合に内側のbodyのループが存在しないので分割出来ない。その場合はsrcRatioが小さい場合は外側のループが分割出来るので問題無い。大きい場合は縮小比率自体が大きいので
 void AveragingReducer::Process_RatioAny(ILineAveragingReducer& lineReducer, uint16_t part)
 {
-	const AveragingReduceParams& params = *pParams;
+	const AveragingReduceParams& params = *pParams_;
 	
 	const __m128i* pSrc = params.srcBuff;
 	__m128i* pTarget = params.targetBuff;
@@ -1668,17 +1626,17 @@ void AveragingReducer::Process_RatioAny(ILineAveragingReducer& lineReducer, uint
 	const __m128i hvTargetSrcRatio = _mm_set1_epi16((65536.0 * hvTargetRatio) / hvSrcRatio + 0.5);
 	uint16_t headRatio;
 	
-	const uint16_t storeCount = getTargetLineArrayCount(*pParams);
+	const uint16_t storeCount = getTargetLineArrayCount(params);
 
 	OffsetPtr(tmpBuffBody, tmpLineOffsetBytes*3*part);
 	OffsetPtr(tmpBuffHead, tmpLineOffsetBytes*3*part);
 	OffsetPtr(tmpBuffTail, tmpLineOffsetBytes*3*part);
 	const uint16_t blockCount = params.srcHeight / srcRatio;
 	const uint16_t bodyCount = targetRatio - 2u;
-	if (parts > 1 && blockCount == 1 && bodyCount >= 4) {
-		const uint16_t partLen = bodyCount / parts;
+	if (parts_ > 1 && blockCount == 1 && bodyCount >= 4) {
+		const uint16_t partLen = bodyCount / parts_;
 		const uint16_t bodyStart = part * partLen;
-		const uint16_t bodyEnd = (part == parts-1) ? bodyCount : (bodyStart + partLen);
+		const uint16_t bodyEnd = (part == parts_ - 1) ? bodyCount : (bodyStart + partLen);
 		{
 			// head
 			if (bodyStart == 0) {
@@ -1757,7 +1715,7 @@ void AveragingReducer::Process_RatioAny(ILineAveragingReducer& lineReducer, uint
 			}
 		}
 	}else {
-		const uint16_t useParts = min(parts, blockCount);
+		const uint16_t useParts = min(parts_, blockCount);
 		if (useParts <= part) {
 			return;
 		}
@@ -1822,15 +1780,15 @@ void AveragingReducer::Process_RatioAny(ILineAveragingReducer& lineReducer, uint
 
 void AveragingReducer::Process(uint16_t part)
 {
-	assert(part < parts);
-	const AveragingReduceParams& params = *pParams;
+	assert(part < parts_);
+	const AveragingReduceParams& params = *pParams_;
 	if (params.widthRatioTarget == params.widthRatioSource && params.heightRatioTarget == params.heightRatioSource) {
 		const __m128i* pSrc = params.srcBuff;
 		__m128i* pTarget = params.targetBuff;
 		if (part >= params.srcHeight) {
 			return;
 		}
-		const uint16_t useParts = min(parts, params.srcHeight);
+		const uint16_t useParts = min(parts_, params.srcHeight);
 		const uint16_t partLen = params.srcHeight / useParts;
 		const uint16_t yStart = partLen * part;
 		const uint16_t yEnd = (part == useParts-1) ? params.srcHeight : (yStart + partLen);
@@ -1870,7 +1828,6 @@ void AveragingReducerCaller::Process(uint16_t part)
 {
 	pImpl_->Process(part);
 }
-
 
 }	// namespace intrinsics_sse2_inout4b
 
