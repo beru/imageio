@@ -48,99 +48,10 @@ __forceinline __m128i make_vec_ratios(uint32_t numerator, uint32_t denominator)
 	__m128d numerators = _mm_cvtsi32_sd(dummy, numerator);
 	__m128d denominators = _mm_cvtsi32_sd(dummy, denominator);
 	__m128d ratios = _mm_div_sd(numerators, denominators);
+	ratios = _mm_add_sd(ratios, _mm_set_sd(0.5));
 	__m128i ints = _mm_cvttpd_epi32(ratios);
 	__m128i shorts = _mm_shufflelo_epi16(ints, 0);
 	return _mm_unpacklo_epi64(shorts, shorts);
-}
-
-void StoreToTarget(
-	uint16_t count,
-	__m128i* targetBuff,
-	const __m128i* tmpBuffBody, const __m128i* tmpBuffEnd,
-	uint32_t endRatio, uint32_t targetRatio, __m128i hvTargetSrcRatio
-	)
-{
-	const __m128i hEndTargetRatio = make_vec_ratios(endRatio << 16, targetRatio);
-	for (uint16_t i=0; i<count; ++i) {
-		__m128i endPixels0 = tmpBuffEnd[i*2+0];
-		__m128i endPixels1 = tmpBuffEnd[i*2+1];
-		endPixels0 = _mm_mulhi_epu16(endPixels0, hEndTargetRatio);
-		endPixels1 = _mm_mulhi_epu16(endPixels1, hEndTargetRatio);
-		__m128i twoPixels0 = _mm_adds_epu16(tmpBuffBody[i*2+0], endPixels0);
-		__m128i twoPixels1 = _mm_adds_epu16(tmpBuffBody[i*2+1], endPixels1);
-		__m128i p0 = _mm_mulhi_epu16(twoPixels0, hvTargetSrcRatio);
-		__m128i p1 = _mm_mulhi_epu16(twoPixels1, hvTargetSrcRatio);
-		
-		// 16 -> 8
-		targetBuff[i] = _mm_packus_epi16(p0, p1);
-	}
-}
-
-void StoreToTarget(
-	uint16_t count,
-	__m128i* targetBuff,
-	const __m128i* tmpBuffBody, const __m128i* tmpBuffHead, const __m128i* tmpBuffTail,
-	uint32_t headRatio, uint32_t tailRatio, uint32_t targetRatio, __m128i hvTargetSrcRatio
-	)
-{
-	const __m128i hHeadTargetRatio = make_vec_ratios(headRatio << 16, targetRatio);
-	const __m128i hTailTargetRatio = make_vec_ratios(tailRatio << 16, targetRatio);
-	for (uint16_t i=0; i<count; ++i) {
-		__m128i headPixels0 = tmpBuffHead[i*2+0];
-		__m128i headPixels1 = tmpBuffHead[i*2+1];
-		headPixels0 = _mm_mulhi_epu16(headPixels0, hHeadTargetRatio);
-		headPixels1 = _mm_mulhi_epu16(headPixels1, hHeadTargetRatio);
-		
-		__m128i tailPixels0 = tmpBuffTail[i*2+0];
-		__m128i tailPixels1 = tmpBuffTail[i*2+1];
-		tailPixels0 = _mm_mulhi_epu16(tailPixels0, hTailTargetRatio);
-		tailPixels1 = _mm_mulhi_epu16(tailPixels1, hTailTargetRatio);
-		
-		__m128i bodyPixels0 = tmpBuffBody[i*2+0];
-		__m128i bodyPixels1 = tmpBuffBody[i*2+1];
-		
-		__m128i twoPixels0 = _mm_adds_epu16(_mm_adds_epu16(headPixels0, bodyPixels0), tailPixels0);
-		__m128i twoPixels1 = _mm_adds_epu16(_mm_adds_epu16(headPixels1, bodyPixels1), tailPixels1);
-		
-		__m128i p0 = _mm_mulhi_epu16(twoPixels0, hvTargetSrcRatio);
-		__m128i p1 = _mm_mulhi_epu16(twoPixels1, hvTargetSrcRatio);
-		
-		// 16 -> 8
-		__m128i result = _mm_packus_epi16(p0, p1);
-		targetBuff[i] = result;
-	}
-}
-
-void StoreToTarget(
-	uint16_t count,
-	__m128i* targetBuff,
-	const __m128i* tmpBuffHead, const __m128i* tmpBuffTail,
-	uint32_t headRatio, uint32_t tailRatio, uint32_t targetRatio, __m128i hvTargetSrcRatio
-	)
-{
-	const __m128i hHeadTargetRatio = make_vec_ratios(headRatio << 16, targetRatio);
-	const __m128i hTailTargetRatio = make_vec_ratios(tailRatio << 16, targetRatio);
-	for (uint16_t i=0; i<count; ++i) {
-		__m128i headPixels0 = tmpBuffHead[i*2+0];
-		__m128i headPixels1 = tmpBuffHead[i*2+1];
-		headPixels0 = _mm_mulhi_epu16(headPixels0, hHeadTargetRatio);
-		headPixels1 = _mm_mulhi_epu16(headPixels1, hHeadTargetRatio);
-		
-		__m128i tailPixels0 = tmpBuffTail[i*2+0];
-		__m128i tailPixels1 = tmpBuffTail[i*2+1];
-		tailPixels0 = _mm_mulhi_epu16(tailPixels0, hTailTargetRatio);
-		tailPixels1 = _mm_mulhi_epu16(tailPixels1, hTailTargetRatio);
-		
-		__m128i twoPixels0 = _mm_adds_epu16(headPixels0, tailPixels0);
-		__m128i twoPixels1 = _mm_adds_epu16(headPixels1, tailPixels1);
-		
-		__m128i p0 = _mm_mulhi_epu16(twoPixels0, hvTargetSrcRatio);
-		__m128i p1 = _mm_mulhi_epu16(twoPixels1, hvTargetSrcRatio);
-		
-		// 16 -> 8
-		__m128i result = _mm_packus_epi16(p0, p1);
-		targetBuff[i] = result;
-	}
 }
 
 class Operation_ReturnA
@@ -729,8 +640,8 @@ public:
 		const uint16_t targetRatio = targetRatio_;
 		const uint16_t srcWidth = srcWidth_;
 		const uint16_t endLoopCnt = srcRatio / targetRatio;
-		const uint16_t remainder = srcRatio % targetRatio;
-		const __m128i remainderDividedByTargetRatio = make_vec_ratios(remainder << 16, targetRatio);
+		const uint16_t remainderRatio = srcRatio % targetRatio;
+		const __m128i remainderDividedByTargetRatio = make_vec_ratios(remainderRatio << 16, targetRatio);
 
 		const uint16_t blockCount = srcWidth / srcRatio;
 		for (uint16_t blockIdx=0; blockIdx<blockCount; ++blockIdx) {
@@ -903,8 +814,8 @@ public:
 		const uint16_t srcRatio = srcRatio_;
 		const uint16_t targetRatio = targetRatio_;
 		const uint16_t srcWidth = srcWidth_;
-		const uint16_t remainder = srcRatio - targetRatio;
-		const __m128i remainderDividedByTargetRatio = make_vec_ratios(remainder << 16, targetRatio);
+		const uint16_t remainderRatio = srcRatio - targetRatio;
+		const __m128i remainderDividedByTargetRatio = make_vec_ratios(remainderRatio << 16, targetRatio);
 
 		const uint16_t blockCount = srcWidth/srcRatio;
 		for (uint16_t blockIdx=0; blockIdx<blockCount; ++blockIdx) {
@@ -1149,8 +1060,8 @@ public:
 		default:
 			{
 				const uint16_t quotient = srcRatio / 4;
-				const uint16_t remainder = srcRatio % 4;
-				switch (remainder) {
+				const uint16_t remainderRatio = srcRatio % 4;
+				switch (remainderRatio) {
 				case 0:
 					{
 						const uint16_t stride = 8 * quotient;
@@ -1428,8 +1339,8 @@ private:
 		uint16_t targetRatio
 		)
 	{
-		const uint16_t remainder = srcRatio % targetRatio;
-		uint16_t tailRatio = remainder;
+		const uint16_t remainderRatio = srcRatio % targetRatio;
+		uint16_t tailRatio = remainderRatio;
 		const uint16_t limit = targetRatio - 2;
 		uint16_t bodyCountSum = 0;
 		const double invTargetRatio = 65536.0 / targetRatio;
@@ -1545,10 +1456,19 @@ void AveragingReducer::Setup(const AveragingReduceParams* pParams, uint16_t part
 }
 
 template <typename LineReducerT>
-void Read(LineReducerT& lineReducer, const __m128i*& pSrc, __m128i* pTarget, ptrdiff_t offsetBytes, uint16_t addReadCount)
+void ReadLines(LineReducerT& lineReducer, const __m128i*& pSrc, __m128i* pTarget, ptrdiff_t offsetBytes, uint16_t addReadCount)
 {
 	lineReducer.fillRead(pSrc, pTarget);
 	OffsetPtr(pSrc, offsetBytes);
+	for (uint16_t i=0; i<addReadCount; ++i) {
+		lineReducer.addRead(pSrc, pTarget);
+		OffsetPtr(pSrc, offsetBytes);
+	}
+}
+
+template <typename LineReducerT>
+void AddLines(LineReducerT& lineReducer, const __m128i*& pSrc, __m128i* pTarget, ptrdiff_t offsetBytes, uint16_t addReadCount)
+{
 	for (uint16_t i=0; i<addReadCount; ++i) {
 		lineReducer.addRead(pSrc, pTarget);
 		OffsetPtr(pSrc, offsetBytes);
@@ -1581,7 +1501,7 @@ void AveragingReducer::Process_Ratio1NX(ILineAveragingReducer& lineReducer, uint
 	for (uint16_t y=yStart; y<yEnd; ++y) {
 		// 最初のライン set to temp
 		// 次のラインから最後の前のラインまで plusEqual to temp
-		Read(lineReducer, srcLine, tmpBuff, params.srcLineOffsetBytes, params.heightRatioSource-1u);
+		ReadLines(lineReducer, srcLine, tmpBuff, params.srcLineOffsetBytes, params.heightRatioSource - 1u);
 		// store
 		for (uint16_t x=0; x<xLoopCount; ++x) {
 			__m128i p0 = tmpBuff[x*2+0];
@@ -1596,6 +1516,81 @@ void AveragingReducer::Process_Ratio1NX(ILineAveragingReducer& lineReducer, uint
 	const uint16_t remain = params.srcHeight % params.heightRatioSource;
 }
 
+void StoreToTarget(
+	uint16_t count,
+	__m128i* targetBuff,
+	const __m128i* tmpBuffBody, __m128i* tmpBuffEnd,
+	__m128i hEndTargetRatio, __m128i hvTargetSrcRatio
+	)
+{
+	for (uint16_t i=0; i<count; ++i) {
+		__m128i endPixels0 = tmpBuffEnd[i*2+0];
+		__m128i endPixelsA = _mm_mulhi_epu16(endPixels0, hEndTargetRatio);
+		tmpBuffEnd[i*2+0] = _mm_sub_epi16(endPixels0, endPixelsA);
+
+		__m128i endPixels1 = tmpBuffEnd[i*2+1];
+		__m128i endPixelsB = _mm_mulhi_epu16(endPixels1, hEndTargetRatio);
+		tmpBuffEnd[i*2+1] = _mm_sub_epi16(endPixels1, endPixelsB);
+
+		__m128i twoPixels0 = _mm_adds_epu16(tmpBuffBody[i*2+0], endPixelsA);
+		__m128i twoPixels1 = _mm_adds_epu16(tmpBuffBody[i*2+1], endPixelsB);
+		__m128i p0 = _mm_mulhi_epu16(twoPixels0, hvTargetSrcRatio);
+		__m128i p1 = _mm_mulhi_epu16(twoPixels1, hvTargetSrcRatio);
+		
+		// 16 -> 8
+		targetBuff[i] = _mm_packus_epi16(p0, p1);
+	}
+}
+
+// creates next head pixels
+// saves (head+body + tail) * ratio
+void StoreToTarget(
+	uint16_t count,
+	__m128i* targetBuff, const __m128i* tmpBuffBody, __m128i* tmpBuffEnd,
+	uint32_t endRatio, uint32_t targetRatio, __m128i hvTargetSrcRatio
+	)
+{
+	const __m128i hEndTargetRatio = make_vec_ratios(endRatio << 16, targetRatio);
+	StoreToTarget(count, targetBuff, tmpBuffBody, tmpBuffEnd, hEndTargetRatio, hvTargetSrcRatio);
+}
+
+// saves (head+body+tail) * ratio
+void StoreToTarget(
+	uint16_t count,
+	__m128i* targetBuff,
+	__m128i* tmpBuff,
+	__m128i hvTargetSrcRatio
+	)
+{
+	for (uint16_t i=0; i<count; ++i) {
+		__m128i p0 = _mm_mulhi_epu16(tmpBuff[i*2+0], hvTargetSrcRatio);
+		__m128i p1 = _mm_mulhi_epu16(tmpBuff[i*2+1], hvTargetSrcRatio);
+		
+		// 16 -> 8
+		targetBuff[i] = _mm_packus_epi16(p0, p1);
+	}
+}
+
+// just creates next head pixels
+void StoreToTarget(
+	uint16_t count,
+	__m128i* tmpBuffEnd,
+	uint32_t endRatio, uint32_t targetRatio
+	)
+{
+	const __m128i hEndTargetRatio = make_vec_ratios(endRatio << 16, targetRatio);
+	for (uint16_t i=0; i<count; ++i) {
+		__m128i endPixels0 = tmpBuffEnd[i*2+0];
+		__m128i endPixelsA = _mm_mulhi_epu16(endPixels0, hEndTargetRatio);
+		tmpBuffEnd[i*2+0] = _mm_sub_epi16(endPixels0, endPixelsA);
+
+		__m128i endPixels1 = tmpBuffEnd[i*2+1];
+		__m128i endPixelsB = _mm_mulhi_epu16(endPixels1, hEndTargetRatio);
+		tmpBuffEnd[i*2+1] = _mm_sub_epi16(endPixels1, endPixelsB);
+	}
+}
+
+
 // 縦 自由比率縮小
 // thread化するとしたら、bodyのtargetRatioのloopを分割か。。
 // targetRatioが2の場合に内側のbodyのループが存在しないので分割出来ない。その場合はsrcRatioが小さい場合は外側のループが分割出来るので問題無い。大きい場合は縮小比率自体が大きいので
@@ -1606,31 +1601,29 @@ void AveragingReducer::Process_RatioAny(ILineAveragingReducer& lineReducer, uint
 	const __m128i* pSrc = params.srcBuff;
 	__m128i* pTarget = params.targetBuff;
 	
-	const size_t denominator = params.widthRatioTarget * params.srcWidth * 4 * 2;
-	size_t tmpLineOffsetBytes = (denominator / params.widthRatioSource) + (denominator % params.widthRatioSource);
-	tmpLineOffsetBytes += 16 - (tmpLineOffsetBytes % 16);
+	const size_t denominator = params.widthRatioTarget * params.srcWidth;
+	size_t tmpLineOffsetBytes = ((denominator / params.widthRatioSource) + (denominator % params.widthRatioSource)) * 4 * 2;
+	tmpLineOffsetBytes += 32 - (tmpLineOffsetBytes % 16);
 	
-	__m128i* tmpBuffBody = params.tmpBuff;
 	__m128i* tmpBuffHead = params.tmpBuff;
 	__m128i* tmpBuffTail = params.tmpBuff;
-	OffsetPtr(tmpBuffHead, tmpLineOffsetBytes);
-	OffsetPtr(tmpBuffTail, tmpLineOffsetBytes*2);
+	OffsetPtr(tmpBuffTail, tmpLineOffsetBytes);
 	
 	const uint16_t srcRatio = params.heightRatioSource;
 	const uint16_t targetRatio = params.heightRatioTarget;
 	
-	const uint16_t remainder = srcRatio % targetRatio;
-	const uint16_t endBodyCnt = (srcRatio - targetRatio - remainder) / targetRatio;
+	const uint16_t remainderRatio = srcRatio % targetRatio;
+	const uint16_t endBodyCnt = (srcRatio - targetRatio - remainderRatio) / targetRatio;
 	const uint32_t hvTargetRatio = targetRatio * params.widthRatioTarget;
 	const uint32_t hvSrcRatio = srcRatio * params.widthRatioSource;
+	const __m128i hRemainderTargetRatio = make_vec_ratios(remainderRatio << 16, targetRatio);
 	const __m128i hvTargetSrcRatio = _mm_set1_epi16((65536.0 * hvTargetRatio) / hvSrcRatio + 0.5);
 	uint16_t headRatio;
 	
 	const uint16_t storeCount = getTargetLineArrayCount(params);
 
-	OffsetPtr(tmpBuffBody, tmpLineOffsetBytes*3*part);
-	OffsetPtr(tmpBuffHead, tmpLineOffsetBytes*3*part);
-	OffsetPtr(tmpBuffTail, tmpLineOffsetBytes*3*part);
+	OffsetPtr(tmpBuffHead, tmpLineOffsetBytes*2*part);
+	OffsetPtr(tmpBuffTail, tmpLineOffsetBytes*2*part);
 	const uint16_t blockCount = params.srcHeight / srcRatio;
 	const uint16_t bodyCount = targetRatio - 2u;
 	if (parts_ > 1 && blockCount == 1 && bodyCount >= 4) {
@@ -1641,15 +1634,16 @@ void AveragingReducer::Process_RatioAny(ILineAveragingReducer& lineReducer, uint
 			// head
 			if (bodyStart == 0) {
 				// head + body
-				Read(lineReducer, pSrc, tmpBuffBody, params.srcLineOffsetBytes, endBodyCnt);
+				ReadLines(lineReducer, pSrc, tmpBuffHead, params.srcLineOffsetBytes, endBodyCnt);
 				// srcRatio data straddles targetRatio's tail and next head
-				lineReducer.fillRead(pSrc, tmpBuffHead);
+				lineReducer.fillRead(pSrc, tmpBuffTail);
 				OffsetPtr(pSrc, params.srcLineOffsetBytes);
-				headRatio = targetRatio - remainder;
-				StoreToTarget(storeCount, pTarget, tmpBuffBody, tmpBuffHead, remainder, targetRatio, hvTargetSrcRatio);
+				headRatio = targetRatio - remainderRatio;
+				StoreToTarget(storeCount, pTarget, tmpBuffHead, tmpBuffTail, hRemainderTargetRatio, hvTargetSrcRatio);
 				OffsetPtr(pTarget, params.targetLineOffsetBytes);
+				std::swap(tmpBuffHead, tmpBuffTail);
 			}else {
-				headRatio = targetRatio - remainder;
+				headRatio = targetRatio - remainderRatio;
 				OffsetPtr(pSrc, params.srcLineOffsetBytes * (1 + endBodyCnt + 1));
 				OffsetPtr(pTarget, params.targetLineOffsetBytes);
 			}
@@ -1675,6 +1669,7 @@ void AveragingReducer::Process_RatioAny(ILineAveragingReducer& lineReducer, uint
 					// tail and next head
 					lineReducer.fillRead(pSrc, tmpBuffTail);
 					OffsetPtr(pSrc, params.srcLineOffsetBytes);
+					StoreToTarget(storeCount, tmpBuffTail, tailRatio, targetRatio);
 					OffsetPtr(pTarget, params.targetLineOffsetBytes);
 					headRatio = targetRatio - tailRatio;
 					const uint16_t withoutHead = srcRatio - headRatio;
@@ -1684,21 +1679,13 @@ void AveragingReducer::Process_RatioAny(ILineAveragingReducer& lineReducer, uint
 				}
 				for (uint16_t i=bodyStart; i<bodyEnd; ++i) {
 					// body
-					if (innerBodyCnt) {
-						Read(lineReducer, pSrc, tmpBuffBody, params.srcLineOffsetBytes, innerBodyCnt-1u);
-						// tail and next head
-						lineReducer.fillRead(pSrc, tmpBuffTail);
-						OffsetPtr(pSrc, params.srcLineOffsetBytes);
-						StoreToTarget(storeCount, pTarget, tmpBuffBody, tmpBuffHead, tmpBuffTail, headRatio, tailRatio, targetRatio, hvTargetSrcRatio);
-						OffsetPtr(pTarget, params.targetLineOffsetBytes);
-					}else {
-						// tail and next head
-						lineReducer.fillRead(pSrc, tmpBuffTail);
-						OffsetPtr(pSrc, params.srcLineOffsetBytes);
-						StoreToTarget(storeCount, pTarget, tmpBuffHead, tmpBuffTail, headRatio, tailRatio, targetRatio, hvTargetSrcRatio);
-						OffsetPtr(pTarget, params.targetLineOffsetBytes);
-					}
-
+					AddLines(lineReducer, pSrc, tmpBuffHead, params.srcLineOffsetBytes, innerBodyCnt);
+					// tail and next head
+					lineReducer.fillRead(pSrc, tmpBuffTail);
+					OffsetPtr(pSrc, params.srcLineOffsetBytes);
+					StoreToTarget(storeCount, pTarget, tmpBuffHead, tmpBuffTail, tailRatio, targetRatio, hvTargetSrcRatio);
+					OffsetPtr(pTarget, params.targetLineOffsetBytes);
+					
 					headRatio = targetRatio - tailRatio;
 					const uint16_t withoutHead = srcRatio - headRatio;
 					innerBodyCnt = withoutHead / targetRatio;
@@ -1709,8 +1696,8 @@ void AveragingReducer::Process_RatioAny(ILineAveragingReducer& lineReducer, uint
 			// tail
 			if (bodyEnd == bodyCount) {
 				// body + tail
-				Read(lineReducer, pSrc, tmpBuffBody, params.srcLineOffsetBytes, endBodyCnt);
-				StoreToTarget(storeCount, pTarget, tmpBuffBody, tmpBuffHead, headRatio, targetRatio, hvTargetSrcRatio);
+				AddLines(lineReducer, pSrc, tmpBuffHead, params.srcLineOffsetBytes, endBodyCnt+1);
+				StoreToTarget(storeCount, pTarget, tmpBuffHead, hvTargetSrcRatio);
 				OffsetPtr(pTarget, params.targetLineOffsetBytes);
 			}
 		}
@@ -1728,41 +1715,32 @@ void AveragingReducer::Process_RatioAny(ILineAveragingReducer& lineReducer, uint
 			// head
 			{
 				// head + body
-				Read(lineReducer, pSrc, tmpBuffBody, params.srcLineOffsetBytes, endBodyCnt);
+				ReadLines(lineReducer, pSrc, tmpBuffHead, params.srcLineOffsetBytes, endBodyCnt);
 				// srcRatio data straddles targetRatio's tail and next head
-				lineReducer.fillRead(pSrc, tmpBuffHead);
+				lineReducer.fillRead(pSrc, tmpBuffTail);
 				OffsetPtr(pSrc, params.srcLineOffsetBytes);
-				headRatio = targetRatio - remainder;
-				StoreToTarget(storeCount, pTarget, tmpBuffBody, tmpBuffHead, remainder, targetRatio, hvTargetSrcRatio);
+				headRatio = targetRatio - remainderRatio;
+				StoreToTarget(storeCount, pTarget, tmpBuffHead, tmpBuffTail, hRemainderTargetRatio, hvTargetSrcRatio);
 				OffsetPtr(pTarget, params.targetLineOffsetBytes);
+				std::swap(tmpBuffHead, tmpBuffTail);
 			}
 			// body
 			{
 				const uint16_t withoutHead = srcRatio - headRatio;
 				uint16_t innerBodyCnt = withoutHead / targetRatio;
-	//			assert(innerBodyCnt > 0);
 				uint16_t tailRatio = withoutHead % targetRatio;
 				for (uint16_t i=0; i<bodyCount; ++i) {
 					// body
-					if (innerBodyCnt) {
-						Read(lineReducer, pSrc, tmpBuffBody, params.srcLineOffsetBytes, innerBodyCnt-1u);
-						// tail and next head
-						lineReducer.fillRead(pSrc, tmpBuffTail);
-						OffsetPtr(pSrc, params.srcLineOffsetBytes);
-						StoreToTarget(storeCount, pTarget, tmpBuffBody, tmpBuffHead, tmpBuffTail, headRatio, tailRatio, targetRatio, hvTargetSrcRatio);
-						OffsetPtr(pTarget, params.targetLineOffsetBytes);
-					}else {
-						// tail and next head
-						lineReducer.fillRead(pSrc, tmpBuffTail);
-						OffsetPtr(pSrc, params.srcLineOffsetBytes);
-						StoreToTarget(storeCount, pTarget, tmpBuffHead, tmpBuffTail, headRatio, tailRatio, targetRatio, hvTargetSrcRatio);
-						OffsetPtr(pTarget, params.targetLineOffsetBytes);
-					}
-
+					AddLines(lineReducer, pSrc, tmpBuffHead, params.srcLineOffsetBytes, innerBodyCnt);
+					// tail and next head
+					lineReducer.fillRead(pSrc, tmpBuffTail);
+					OffsetPtr(pSrc, params.srcLineOffsetBytes);
+					StoreToTarget(storeCount, pTarget, tmpBuffHead, tmpBuffTail, tailRatio, targetRatio, hvTargetSrcRatio);
+					OffsetPtr(pTarget, params.targetLineOffsetBytes);
+					
 					headRatio = targetRatio - tailRatio;
 					const uint16_t withoutHead = srcRatio - headRatio;
 					innerBodyCnt = withoutHead / targetRatio;
-	//				assert(innerBodyCnt > 0);
 					tailRatio = withoutHead % targetRatio;
 					std::swap(tmpBuffHead, tmpBuffTail);
 				}
@@ -1770,8 +1748,8 @@ void AveragingReducer::Process_RatioAny(ILineAveragingReducer& lineReducer, uint
 			// tail
 			{
 				// body + tail
-				Read(lineReducer, pSrc, tmpBuffBody, params.srcLineOffsetBytes, endBodyCnt);
-				StoreToTarget(storeCount, pTarget, tmpBuffBody, tmpBuffHead, headRatio, targetRatio, hvTargetSrcRatio);
+				AddLines(lineReducer, pSrc, tmpBuffHead, params.srcLineOffsetBytes, endBodyCnt+1);
+				StoreToTarget(storeCount, pTarget, tmpBuffHead, hvTargetSrcRatio);
 				OffsetPtr(pTarget, params.targetLineOffsetBytes);
 			}
 		}
