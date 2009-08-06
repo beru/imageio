@@ -465,6 +465,8 @@ public:
 						one = _mm_srli_si128(plus, 8);
 					}
 					break;
+				default:
+					__assume(false);
 				}
 
 		}else {
@@ -486,6 +488,8 @@ public:
 				sum = Split_3_1(load_unaligned_128(pSrc));
 				one = _mm_srli_si128(sum, 8);
 				break;
+			default:
+				__assume(false);
 			}
 		}
 	}
@@ -914,6 +918,8 @@ public:
 							col2 = _mm_srli_si128(subtracted, 8);
 						}
 						break;
+					default:
+						__assume(false);
 					}
 				}
 				if (limit & 1) {
@@ -995,7 +1001,7 @@ public:
 			}
 			break;
 		case 2:
-			// eat 4 src pixels at once and produce 2 tmp pixels
+			// eats 4 src pixels at once and produces 2 tmp pixels
 			{
 				const uint16_t loopCount = srcWidth / 4;
 				const uint16_t loopRemain = srcWidth % 4;
@@ -1016,7 +1022,7 @@ public:
 			break;
 		case 3:
 			{
-				// eat 12 src pixels at once and produce 4 tmp pixels
+				// eats 12 src pixels at once and produces 4 tmp pixels
 				__m128i result0, result1;
 				const uint16_t loopCount = srcWidth / 12;
 				const uint16_t remain = srcWidth % 12;
@@ -1039,7 +1045,7 @@ public:
 			break;
 		case 4:
 			{
-				// eat 8 src pixels at once and produce 2 tmp pixels
+				// eats 8 src pixels at once and produces 2 tmp pixels
 				const uint16_t loopCount = srcWidth / 8;
 				const uint16_t remain = srcWidth % 8;
 				const uint16_t remainLoopCount = remain / 4;
@@ -1314,6 +1320,8 @@ public:
 						// TODO: remaining 1 to srcRatio-1 pixels
 					}
 					break;
+				default:
+					__assume(false);
 				}
 			}
 			break;
