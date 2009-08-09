@@ -135,7 +135,7 @@ OutputDebugString(buff);
 	m_lastHeightRatioSource = 0;
 	
 	freeTmpBuffs();
-	m_tmpLineOffsetBytes = gl::align(std::min(m_pSrc->GetWidth(), MAX_WINDOW_WIDTH) * 4 * sizeof(NumericT), 16);
+	m_tmpLineOffsetBytes = gl::align(std::min(m_pSrc->GetWidth(), MAX_WINDOW_WIDTH) * 4 * sizeof(NumericT), 256);
 	const size_t height = m_pSrc->GetHeight();
 	size_t lineIdx = 0;
 	const size_t allocSize = m_tmpLineOffsetBytes * (height + 1);
@@ -145,7 +145,7 @@ OutputDebugString(buff);
 	m_tmpBuffs.resize(blockCount);
 	m_tmpLines.resize(blockCount * blockLines);
 	for (size_t i=0; i<blockCount; ++i) {
-		char* addr = (char*) _mm_malloc(blockSize, 16);
+		char* addr = (char*) _mm_malloc(blockSize, 256);
 		if (addr == 0) {
 			errno_t err;
 			_get_errno(&err);

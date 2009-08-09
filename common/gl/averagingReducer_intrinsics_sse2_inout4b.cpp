@@ -1427,6 +1427,9 @@ void AveragingReducer::Setup(const AveragingReduceParams* pParams, uint16_t part
 			params.widthRatioTarget
 		);
 		if (params.widthRatioSource > params.widthRatioTarget * 2) {
+			if (params.widthRatioTarget == 2) {
+				maxBodyCount = 1;
+			}
 			switch (maxBodyCount) {
 			case 4:
 				lar_RatioAny_Basic_4.srcRatio_ = params.widthRatioSource;
@@ -1622,8 +1625,9 @@ void AveragingReducer::Process_RatioAny(ILineAveragingReducer& lineReducer, uint
 	
 	const size_t denominator = params.widthRatioTarget * params.srcWidth;
 	size_t tmpLineOffsetBytes = ((denominator / params.widthRatioSource) + (denominator % params.widthRatioSource)) * 4 * 2;
-	tmpLineOffsetBytes += 32 - (tmpLineOffsetBytes % 16);
-	
+	tmpLineOffsetBytes += 16 - (tmpLineOffsetBytes % 16);
+	tmpLineOffsetBytes += 256 - (tmpLineOffsetBytes % 256);
+		
 	__m128i* tmpBuffHead = params.tmpBuff;
 	__m128i* tmpBuffTail = params.tmpBuff;
 	OffsetPtr(tmpBuffTail, tmpLineOffsetBytes);
