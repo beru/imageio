@@ -481,17 +481,16 @@ public:
 			sum = _mm_adds_epu16(sum, CollectSum_4(pSrc));
 			++pSrc;
 		}
-		switch (count & 0x03) {
+		const uint16_t remain = count & 0x03;
+		switch (remain) {
 		case 0:
 			one = _mm_unpacklo_epi8(_mm_cvtsi32_si128(*(const int*)pSrc), _mm_setzero_si128());
-			OffsetPtr(pSrc, 4);
 			break;
 		case 1:
 			{
 				__m128i plus = _mm_unpacklo_epi8(_mm_loadl_epi64(pSrc), _mm_setzero_si128());
 				sum = _mm_adds_epu16(sum, plus);
 				one = _mm_srli_si128(plus, 8);
-				OffsetPtr(pSrc, 8);
 			}
 			break;
 		case 2:
@@ -501,7 +500,6 @@ public:
 				__m128i plus = _mm_add_epi16(twoPixels0, _mm_srli_si128(twoPixels0, 8));
 				sum = _mm_adds_epu16(sum, plus);
 				one = _mm_unpackhi_epi8(src, _mm_setzero_si128());
-				OffsetPtr(pSrc, 12);
 			}
 			break;
 		case 3:
@@ -509,12 +507,12 @@ public:
 				__m128i plus = Split_3_1(load_unaligned_128(pSrc));
 				sum = _mm_adds_epu16(sum, plus);
 				one = _mm_srli_si128(plus, 8);
-				++pSrc;
 			}
 			break;
 		default:
 			__assume(false);
 		}
+		OffsetPtr(pSrc, (remain+1)*4);
 	}
 };
 
@@ -564,7 +562,7 @@ public:
 		if (is3) {
 			sum = Split_3_1(src);
 			one = _mm_srli_si128(sum, 8);
-			OffsetPtr(pSrc, 16);
+			++pSrc;
 		}else {
 			__m128i twoPixels0 = _mm_unpacklo_epi8(src, _mm_setzero_si128());
 			sum = _mm_add_epi16(twoPixels0, _mm_srli_si128(twoPixels0, 8));
@@ -625,17 +623,16 @@ public:
 			sum = _mm_adds_epu16(sum, CollectSum_4(pSrc));
 			++pSrc;
 		}
-		switch (count & 0x03) {
+		const uint16_t remain = count & 0x03;
+		switch (remain) {
 		case 0:
 			one = _mm_unpacklo_epi8(_mm_cvtsi32_si128(*(const int*)pSrc), _mm_setzero_si128());
-			OffsetPtr(pSrc, 4);
 			break;
 		case 1:
 			{
 				__m128i plus = _mm_unpacklo_epi8(_mm_loadl_epi64(pSrc), _mm_setzero_si128());
 				sum = _mm_adds_epu16(sum, plus);
 				one = _mm_srli_si128(plus, 8);
-				OffsetPtr(pSrc, 8);
 			}
 			break;
 		case 2:
@@ -645,7 +642,6 @@ public:
 				__m128i plus = _mm_add_epi16(twoPixels0, _mm_srli_si128(twoPixels0, 8));
 				sum = _mm_adds_epu16(sum, plus);
 				one = _mm_unpackhi_epi8(src, _mm_setzero_si128());
-				OffsetPtr(pSrc, 12);
 			}
 			break;
 		case 3:
@@ -653,15 +649,16 @@ public:
 				__m128i plus = Split_3_1(load_unaligned_128(pSrc));
 				sum = _mm_adds_epu16(sum, plus);
 				one = _mm_srli_si128(plus, 8);
-				OffsetPtr(pSrc, 16);
 			}
 			break;
 		default:
 			__assume(false);
 		}
+		OffsetPtr(pSrc, (remain+1)*4);
 	}
 };
 
+template <typename BodyCollectSumAndNext1T, typename HeadCollectSumAndNext1T, typename TailCollectSumT>
 class LineAveragingReducer_RatioAny_Basic : public LineAveragingReducer_RatioAny_Base
 {
 private:
@@ -679,8 +676,8 @@ public:
 	{
 	}
 	
-	template <typename T, typename BodyCollectSumAndNext1T, typename HeadCollectSumAndNext1T, typename TailCollectSumT>
-	void iterate2(const __m128i* srcBuff, __m128i* tmpBuff)
+	template <typename T>
+	__forceinline void iterate(const __m128i* srcBuff, __m128i* tmpBuff)
 	{
 		const __m128i* pSrc = srcBuff;
 		__m128i* pTmp = tmpBuff;
@@ -812,28 +809,6 @@ public:
 			}
 		}
 	}
-	
-	template <typename T>
-	__forceinline void iterate(const __m128i* srcBuff, __m128i* tmpBuff)
-	{
-		switch (maxBodyCount_) {
-		case 4:
-			iterate2<T, CollectSumAndNext1_4or3, CollectSumAndNext1_5or4, CollectSum_5or4>(srcBuff, tmpBuff);
-			break;
-		case 3:
-			iterate2<T, CollectSumAndNext1_3or2, CollectSumAndNext1_4or3, CollectSum_4or3>(srcBuff, tmpBuff);
-			break;
-		case 2:
-			iterate2<T, CollectSumAndNext1_2or1, CollectSumAndNext1_3or2, CollectSum_3or2>(srcBuff, tmpBuff);
-			break;
-		case 1:
-			iterate2<T, CollectSumAndNext1_1or0, CollectSumAndNext1_2or1, CollectSum_2or1>(srcBuff, tmpBuff);
-			break;
-		default:
-			iterate2<T, CollectSumAndNext1_X, CollectSumAndNext1, CollectSum>(srcBuff, tmpBuff);
-			break;
-		}
-	}
 
 };
 
@@ -854,7 +829,7 @@ public:
 	}
 	
 	template <typename T>
-	void iterate(const __m128i* srcBuff, __m128i* tmpBuff)
+	__forceinline void iterate(const __m128i* srcBuff, __m128i* tmpBuff)
 	{
 		const __m128i* pSrc = srcBuff;
 		__m128i* pTmp = tmpBuff;
@@ -1452,13 +1427,21 @@ private:
 	
 	ILineAveragingReducer* pLineAveragingReducer;
 	LineAveragingReducer_Ratio1NX lar_Ratio1NX;
-	LineAveragingReducer_RatioAny_Basic lar_RatioAny_Basic;
+	LineAveragingReducer_RatioAny_Basic<CollectSumAndNext1_X, CollectSumAndNext1, CollectSum> lar_RatioAny_Basic_5up;
+	LineAveragingReducer_RatioAny_Basic<CollectSumAndNext1_4or3, CollectSumAndNext1_5or4, CollectSum_5or4> lar_RatioAny_Basic_4;
+	LineAveragingReducer_RatioAny_Basic<CollectSumAndNext1_3or2, CollectSumAndNext1_4or3, CollectSum_4or3> lar_RatioAny_Basic_3;
+	LineAveragingReducer_RatioAny_Basic<CollectSumAndNext1_2or1, CollectSumAndNext1_3or2, CollectSum_3or2> lar_RatioAny_Basic_2;
+	LineAveragingReducer_RatioAny_Basic<CollectSumAndNext1_1or0, CollectSumAndNext1_2or1, CollectSum_2or1> lar_RatioAny_Basic_1;
 	LineAveragingReducer_RatioAny_MoreThanHalf lar_RatioAny_MoreThanHalf;
 };
 
 AveragingReducer::AveragingReducer()
 	:
-	lar_RatioAny_Basic(bodyCountBits_, tailTargetRatios_),
+	lar_RatioAny_Basic_5up(bodyCountBits_, tailTargetRatios_),
+	lar_RatioAny_Basic_4(bodyCountBits_, tailTargetRatios_),
+	lar_RatioAny_Basic_3(bodyCountBits_, tailTargetRatios_),
+	lar_RatioAny_Basic_2(bodyCountBits_, tailTargetRatios_),
+	lar_RatioAny_Basic_1(bodyCountBits_, tailTargetRatios_),
 	lar_RatioAny_MoreThanHalf(bodyCounts_, tailTargetRatios_)
 {
 }
@@ -1493,11 +1476,44 @@ void AveragingReducer::Setup(const AveragingReduceParams* pParams, uint16_t part
 			params.widthRatioTarget
 		);
 		if (params.widthRatioSource > params.widthRatioTarget * 2) {
-			lar_RatioAny_Basic.srcRatio_ = params.widthRatioSource;
-			lar_RatioAny_Basic.targetRatio_ = params.widthRatioTarget;
-			lar_RatioAny_Basic.srcWidth_ = params.srcWidth;
-			lar_RatioAny_Basic.maxBodyCount_ = maxBodyCount;
-			pLineAveragingReducer = &lar_RatioAny_Basic;
+			switch (maxBodyCount) {
+			case 4:
+				lar_RatioAny_Basic_4.srcRatio_ = params.widthRatioSource;
+				lar_RatioAny_Basic_4.targetRatio_ = params.widthRatioTarget;
+				lar_RatioAny_Basic_4.srcWidth_ = params.srcWidth;
+				lar_RatioAny_Basic_4.maxBodyCount_ = maxBodyCount;
+				pLineAveragingReducer = &lar_RatioAny_Basic_4;
+				break;
+			case 3:
+				lar_RatioAny_Basic_3.srcRatio_ = params.widthRatioSource;
+				lar_RatioAny_Basic_3.targetRatio_ = params.widthRatioTarget;
+				lar_RatioAny_Basic_3.srcWidth_ = params.srcWidth;
+				lar_RatioAny_Basic_3.maxBodyCount_ = maxBodyCount;
+				pLineAveragingReducer = &lar_RatioAny_Basic_3;
+				break;
+			case 2:
+				lar_RatioAny_Basic_2.srcRatio_ = params.widthRatioSource;
+				lar_RatioAny_Basic_2.targetRatio_ = params.widthRatioTarget;
+				lar_RatioAny_Basic_2.srcWidth_ = params.srcWidth;
+				lar_RatioAny_Basic_2.maxBodyCount_ = maxBodyCount;
+				pLineAveragingReducer = &lar_RatioAny_Basic_2;
+				break;
+			case 1:
+				lar_RatioAny_Basic_1.srcRatio_ = params.widthRatioSource;
+				lar_RatioAny_Basic_1.targetRatio_ = params.widthRatioTarget;
+				lar_RatioAny_Basic_1.srcWidth_ = params.srcWidth;
+				lar_RatioAny_Basic_1.maxBodyCount_ = maxBodyCount;
+				pLineAveragingReducer = &lar_RatioAny_Basic_1;
+				break;
+			default:
+				lar_RatioAny_Basic_5up.srcRatio_ = params.widthRatioSource;
+				lar_RatioAny_Basic_5up.targetRatio_ = params.widthRatioTarget;
+				lar_RatioAny_Basic_5up.srcWidth_ = params.srcWidth;
+				lar_RatioAny_Basic_5up.maxBodyCount_ = maxBodyCount;
+				pLineAveragingReducer = &lar_RatioAny_Basic_5up;
+				break;
+			}
+
 		}else {
 			lar_RatioAny_MoreThanHalf.srcRatio_ = params.widthRatioSource;
 			lar_RatioAny_MoreThanHalf.targetRatio_ = params.widthRatioTarget;
