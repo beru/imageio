@@ -1558,8 +1558,8 @@ void AveragingReducer::Setup(const AveragingReduceParams* pParams, uint16_t part
 			params.widthRatioTarget
 		);
 		if (params.widthRatioSource > params.widthRatioTarget * 2) {
-			if (params.widthRatioTarget == 2 && (params.widthRatioSource / params.widthRatioTarget) < 6) {
-				maxBodyCount = 1;
+			if (params.widthRatioTarget == 2 && (params.widthRatioSource / params.widthRatioTarget) < 4) {
+				maxBodyCount = (params.widthRatioSource / params.widthRatioTarget) - 1;
 			}
 			switch (maxBodyCount) {
 			case 4:
@@ -1591,6 +1591,9 @@ void AveragingReducer::Setup(const AveragingReduceParams* pParams, uint16_t part
 				pLineAveragingReducer = &lar_RatioAny_Basic_1;
 				break;
 			default:
+				if (params.widthRatioTarget == 2) {
+					maxBodyCount = (params.widthRatioSource / params.widthRatioTarget) - 1;
+				}
 				switch (maxBodyCount % 4) {
 				case 3:
 					lar_RatioAny_Basic_5up_3.srcRatio_ = params.widthRatioSource;
