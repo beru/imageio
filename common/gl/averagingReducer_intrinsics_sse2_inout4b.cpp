@@ -367,6 +367,24 @@ __forceinline __m128i CollectSum_4(const __m128i*& pSrc, const uint16_t addCount
 	return _mm_add_epi16(_mm_move_epi64(sum), _mm_srli_si128(sum, 8));
 }
 
+__forceinline __m128i CollectSum_4_aligned(const __m128i*& pSrc, const uint16_t addCount)
+{
+	__m128i src = *pSrc++;
+	__m128i sum = _mm_add_epi16(
+		_mm_unpacklo_epi8(src, _mm_setzero_si128()),
+		_mm_unpackhi_epi8(src, _mm_setzero_si128())
+	);
+	for (uint16_t i=1; i<addCount; ++i) {
+		src = *pSrc++;
+		__m128i sum2 = _mm_add_epi16(
+			_mm_unpacklo_epi8(src, _mm_setzero_si128()),
+			_mm_unpackhi_epi8(src, _mm_setzero_si128())
+		);
+		sum = _mm_add_epi16(sum, sum2);
+	}
+	return _mm_add_epi16(_mm_move_epi64(sum), _mm_srli_si128(sum, 8));
+}
+
 class LineAveragingReducer_RatioAny_Base : public ILineAveragingReducer
 {
 public:
@@ -1172,37 +1190,15 @@ public:
 						const uint16_t remainRemain = remainCount % srcRatio;
 						for (uint16_t i=0; i<loopCount; ++i) {
 							__m128i tmp;
-							// left
-							__m128i left = _mm_setzero_si128();
-							left = Collect_4(*pSrc);
-							++pSrc;
-							for (uint16_t j=0; j<quotient-1u; ++j) {
-								tmp = Collect_4(*pSrc);
-								++pSrc;
-								left = _mm_add_epi16(left, tmp);
-							}
-							// right
-							__m128i right = _mm_setzero_si128();
-							right = Collect_4(*pSrc);
-							++pSrc;
-							for (uint16_t j=0; j<quotient-1u; ++j) {
-								tmp = Collect_4(*pSrc);
-								++pSrc;
-								right = _mm_add_epi16(right, tmp);
-							}
+							__m128i left = CollectSum_4_aligned(pSrc, quotient);
+							__m128i right = CollectSum_4_aligned(pSrc, quotient);
 							right = _mm_slli_si128(right, 8);
-							// set
 							__m128i result = _mm_add_epi16(left, right);
 							*pTmp = T::work(*pTmp, result);
 							++pTmp;
 						}
 						for (uint16_t i=0; i<remainLoopCount; ++i) {
-							__m128i col = Collect_4(*pSrc);
-							++pSrc;
-							for (uint16_t j=0; j<quotient-1u; ++j) {
-								col = _mm_add_epi16(col, Collect_4(*pSrc));
-								++pSrc;
-							}
+							__m128i col = CollectSum_4_aligned(pSrc, quotient);
 							_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), col));
 							OffsetPtr(pTmp, 8);
 						}
@@ -1221,13 +1217,7 @@ public:
 						const uint16_t remainRemain = remainCount % srcRatio;
 						for (uint16_t i=0; i<loopCount; ++i) {
 							// 1 left
-							left = Collect_4(*pSrc);
-							++pSrc;
-							for (uint16_t j=0; j<quotient-1u; ++j) {
-								tmp = Collect_4(*pSrc);
-								++pSrc;
-								left = _mm_add_epi16(left, tmp);
-							}
+							left = CollectSum_4_aligned(pSrc, quotient);
 							straddling1 = Split_1_3(*pSrc);
 							++pSrc;
 							// 2 right
@@ -1256,13 +1246,7 @@ public:
 							straddling3 = Split_3_1(*pSrc);
 							++pSrc;
 							// 4 right
-							right = Collect_4(*pSrc);
-							++pSrc;
-							for (uint16_t j=0; j<quotient-1u; ++j) {
-								tmp = Collect_4(*pSrc);
-								++pSrc;
-								right = _mm_add_epi16(right, tmp);
-							}
+							right = CollectSum_4_aligned(pSrc, quotient);
 							result = _mm_add_epi16(left, straddling3);
 							right = _mm_slli_si128(right, 8);
 							result = _mm_add_epi16(result, right);
@@ -1270,12 +1254,7 @@ public:
 							++pTmp;
 						}
 						for (uint16_t i=0; i<remainLoopCount; ++i) {
-							__m128i col = Collect_4(_mm_loadu_si128(pSrc));
-							++pSrc;
-							for (uint16_t j=0; j<quotient-1u; ++j) {
-								col = _mm_add_epi16(col, Collect_4(_mm_loadu_si128(pSrc)));
-								++pSrc;
-							}
+							__m128i col = CollectSum_4(pSrc, quotient);
 							col = _mm_add_epi16(col, CollectSum_1(pSrc));
 							OffsetPtr(pSrc, 4);
 							_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), col));
@@ -1296,24 +1275,11 @@ public:
 						const uint16_t remainRemain = remainCount % srcRatio;
 						for (uint16_t i=0; i<loopCount; ++i) {
 							// left
-							left = Collect_4(*pSrc);
-							++pSrc;
-							for (uint16_t j=0; j<quotient-1u; ++j) {
-								tmp = Collect_4(*pSrc);
-								++pSrc;
-								left = _mm_add_epi16(left, tmp);
-							}
+							left = CollectSum_4_aligned(pSrc, quotient);
 							straddling = Split_2_2(*pSrc);
 							++pSrc;
 							// right
-							right = Collect_4(*pSrc);
-							++pSrc;
-							for (uint16_t j=0; j<quotient-1u; ++j) {
-								tmp = Collect_4(*pSrc);
-								++pSrc;
-								right = _mm_add_epi16(right, tmp);
-							}
-
+							right = CollectSum_4_aligned(pSrc, quotient);
 							result = _mm_add_epi16(left, straddling);
 							right = _mm_slli_si128(right, 8);
 							result = _mm_add_epi16(result, right);
@@ -1322,12 +1288,7 @@ public:
 						}
 						assert(remainLoopCount < 2);
 						if (remainLoopCount) {
-							__m128i col = Collect_4(*pSrc);
-							++pSrc;
-							for (uint16_t j=0; j<quotient-1u; ++j) {
-								col = _mm_add_epi16(col, Collect_4(*pSrc));
-								++pSrc;
-							}
+							__m128i col = CollectSum_4(pSrc, quotient);
 							col = _mm_add_epi16(col, CollectSum_2(pSrc));
 							OffsetPtr(pSrc, 8);
 							_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), col));
@@ -1348,23 +1309,11 @@ public:
 						const uint16_t remainRemain = remainCount % srcRatio;
 						for (uint16_t i=0; i<loopCount; ++i) {
 							// 1 left
-							left = Collect_4(*pSrc);
-							++pSrc;
-							for (uint16_t j=0; j<quotient-1u; ++j) {
-								tmp = Collect_4(*pSrc);
-								++pSrc;
-								left = _mm_add_epi16(left, tmp);
-							}
+							left = CollectSum_4_aligned(pSrc, quotient);
 							straddling1 = Split_3_1(*pSrc);
 							++pSrc;
 							// 2 right
-							right = Collect_4(*pSrc);
-							++pSrc;
-							for (uint16_t j=0; j<quotient-1u; ++j) {
-								tmp = Collect_4(*pSrc);
-								++pSrc;
-								right = _mm_add_epi16(right, tmp);
-							}
+							right = CollectSum_4_aligned(pSrc, quotient);
 							straddling2 = Split_2_2(*pSrc);
 							++pSrc;
 							result = _mm_add_epi16(left, straddling1);
@@ -1376,24 +1325,11 @@ public:
 
 							// 3 left
 							left = _mm_srli_si128(straddling2, 8);
-							tmp = Collect_4(*pSrc);
-							++pSrc;
-							left = _mm_add_epi16(left, tmp);
-							for (uint16_t j=0; j<quotient-1u; ++j) {
-								tmp = Collect_4(*pSrc);
-								++pSrc;
-								left = _mm_add_epi16(left, tmp);
-							}
+							left = _mm_add_epi16(left, CollectSum_4_aligned(pSrc, quotient));
 							straddling3 = Split_1_3(*pSrc);
 							++pSrc;
 							// 4 right
-							right = Collect_4(*pSrc);
-							++pSrc;
-							for (uint16_t j=0; j<quotient-1u; ++j) {
-								tmp = Collect_4(*pSrc);
-								++pSrc;
-								right = _mm_add_epi16(right, tmp);
-							}
+							right = CollectSum_4_aligned(pSrc, quotient);
 							result = _mm_add_epi16(left, straddling3);
 							right = _mm_slli_si128(right, 8);
 							result = _mm_add_epi16(result, right);
@@ -1401,12 +1337,7 @@ public:
 							++pTmp;
 						}
 						for (uint16_t i=0; i<remainLoopCount; ++i) {
-							__m128i col = Collect_4(_mm_loadu_si128(pSrc));
-							++pSrc;
-							for (uint16_t j=0; j<quotient-1u; ++j) {
-								col = _mm_add_epi16(col, Collect_4(_mm_loadu_si128(pSrc)));
-								++pSrc;
-							}
+							__m128i col = CollectSum_4(pSrc, quotient);
 							col = _mm_add_epi16(col, CollectSum_3(pSrc));
 							OffsetPtr(pSrc, 12);
 							_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), col));
