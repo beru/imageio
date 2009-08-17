@@ -792,11 +792,12 @@ public:
 			{
 				__m128i col;
 				HeadCollectSumAndNext1T::work(pSrc, endLoopCnt, endLoopCnt - maxBodyCount_, col, col2);
+				__m128i tmpBase = _mm_loadl_epi64(pTmp);
 				// srcRatio data straddles targetRatio's tail and next head
 				__m128i col2a = _mm_mulhi_epu16(col2, remainderDividedByTargetRatio);
 				col = _mm_add_epi16(col, col2a);
 				col2 = _mm_sub_epi16(col2, col2a);
-				_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), col));
+				_mm_storel_epi64(pTmp, T::work(tmpBase, col));
 				OffsetPtr(pTmp, 8);
 			}
 			// body
@@ -820,13 +821,14 @@ public:
 						__m128i col2a;
 
 						/// 1
-						tailTargetRatio = _mm_shufflelo_epi16(tailTargetRatios, _MM_SHUFFLE(0,0,0,0));
 						BodyCollectSumAndNext1T::work(pSrc, bodyCountBase+(bodyCountBits & 1), bodyCountBits & 1, collected, col2);
 						bodyCountBits >>= 1;
+						__m128i tmpBase = load_unaligned_128(pTmp);
+						tailTargetRatio = _mm_shufflelo_epi16(tailTargetRatios, _MM_SHUFFLE(0,0,0,0));
 						col = _mm_add_epi16(col, collected);
 						col2a = _mm_mulhi_epu16(col2, tailTargetRatio);	// col2 * tail/target
 						col = _mm_add_epi16(col, col2a);
-						_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), col));
+						_mm_storel_epi64(pTmp, T::work(tmpBase, col));
 						OffsetPtr(pTmp, 8);
 						col = _mm_sub_epi16(col2, col2a);
 						/// 2
@@ -836,17 +838,18 @@ public:
 						col = _mm_add_epi16(col, collected);
 						col2a = _mm_mulhi_epu16(col2, tailTargetRatio);	// col2 * tail/target
 						col = _mm_add_epi16(col, col2a);
-						_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), col));
+						_mm_storel_epi64(pTmp, T::work(_mm_srli_si128(tmpBase, 8), col));
 						OffsetPtr(pTmp, 8);
 						col = _mm_sub_epi16(col2, col2a);
 						/// 3
-						tailTargetRatio = _mm_shufflelo_epi16(tailTargetRatios, _MM_SHUFFLE(2,2,2,2));
 						BodyCollectSumAndNext1T::work(pSrc, bodyCountBase+(bodyCountBits & 1), bodyCountBits & 1, collected, col2);
 						bodyCountBits >>= 1;
+						tmpBase = load_unaligned_128(pTmp);
+						tailTargetRatio = _mm_shufflelo_epi16(tailTargetRatios, _MM_SHUFFLE(2,2,2,2));
 						col = _mm_add_epi16(col, collected);
 						col2a = _mm_mulhi_epu16(col2, tailTargetRatio);	// col2 * tail/target
 						col = _mm_add_epi16(col, col2a);
-						_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), col));
+						_mm_storel_epi64(pTmp, T::work(tmpBase, col));
 						OffsetPtr(pTmp, 8);
 						col = _mm_sub_epi16(col2, col2a);
 						/// 4
@@ -856,7 +859,7 @@ public:
 						col = _mm_add_epi16(col, collected);
 						col2a = _mm_mulhi_epu16(col2, tailTargetRatio);	// col2 * tail/target
 						col = _mm_add_epi16(col, col2a);
-						_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), col));
+						_mm_storel_epi64(pTmp, T::work(_mm_srli_si128(tmpBase, 8), col));
 						OffsetPtr(pTmp, 8);
 						col2 = _mm_sub_epi16(col2, col2a);
 
@@ -883,12 +886,13 @@ public:
 						__m128i collected;
 						__m128i col = col2; // head
 						BodyCollectSumAndNext1T::work(pSrc, bodyCountBase+(bodyCountBits & 1), bodyCountBits & 1, collected, col2);
+						__m128i tmpBase = _mm_loadl_epi64(pTmp);
 						bodyCountBits >>= 1;
 						col = _mm_add_epi16(col, collected);
 						__m128i tailTargetRatio = set1_epi16_low(*pWorkTailTargetRatios++);
 						__m128i col2a = _mm_mulhi_epu16(col2, tailTargetRatio);	// col2 * tail/target
 						col = _mm_add_epi16(col, col2a);
-						_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), col));
+						_mm_storel_epi64(pTmp, T::work(tmpBase, col));
 						OffsetPtr(pTmp, 8);
 						col2 = _mm_sub_epi16(col2, col2a);
 					}
@@ -924,7 +928,7 @@ public:
 	}
 	
 	template <typename T>
-	__forceinline void iterate(const __m128i* srcBuff, __m128i* tmpBuff)
+	void iterate(const __m128i* srcBuff, __m128i* tmpBuff)
 	{
 		const __m128i* pSrc = srcBuff;
 		__m128i* pTmp = tmpBuff;
@@ -942,11 +946,12 @@ public:
 			{
 				__m128i col;
 				CollectSumAndNext1_2or1::work(pSrc, 1, 0, col, col2);
+				__m128i tmpBase = _mm_loadl_epi64(pTmp);
 				// srcRatio data straddles targetRatio's tail and next head
 				__m128i col2a = _mm_mulhi_epu16(col2, remainderDividedByTargetRatio);
 				col = _mm_add_epi16(col, col2a);
 				col2 = _mm_sub_epi16(col2, col2a);
-				_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), col));
+				_mm_storel_epi64(pTmp, T::work(tmpBase, col));
 				OffsetPtr(pTmp, 8);
 			}
 			// body
@@ -956,6 +961,7 @@ public:
 				const uint16_t* pIntBodyCounts = (const uint16_t*) pBodyCounts_;
 				const uint32_t* pIntTailTargetRatios = (const uint32_t*) pTailTargetRatios_;
 				for (uint16_t i=0; i<loopCount; ++i) {
+					__m128i tmpBase = load_unaligned_128(pTmp);
 					const __m128i ratiosOrg = _mm_cvtsi32_si128(*pIntTailTargetRatios++);
 					const __m128i ratiosTmp = _mm_shufflelo_epi16(ratiosOrg, _MM_SHUFFLE(1,1,0,0));
 					const __m128i ratios = _mm_shuffle_epi32(ratiosTmp, _MM_SHUFFLE(1,1,0,0));
@@ -968,10 +974,10 @@ public:
 							__m128i multiplied = _mm_mulhi_epu16(src, ratios);
 							__m128i subtracted = _mm_sub_epi16(src, multiplied);
 							__m128i colFirst = _mm_add_epi16(col2, multiplied);
-							_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), colFirst));
+							_mm_storel_epi64(pTmp, T::work(tmpBase, colFirst));
 							OffsetPtr(pTmp, 8);
 							__m128i colSecond = _mm_add_epi16(subtracted, _mm_srli_si128(multiplied, 8));
-							_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), colSecond));
+							_mm_storel_epi64(pTmp, T::work(_mm_srli_si128(tmpBase, 8), colSecond));
 							OffsetPtr(pTmp, 8);
 							col2 = _mm_srli_si128(subtracted, 8);
 						}
@@ -986,10 +992,10 @@ public:
 							__m128i subtracted = _mm_sub_epi16(remain, multiplied);
 							__m128i col = _mm_add_epi16(col2, collected);
 							__m128i colFirst = _mm_add_epi16(col, multiplied);
-							_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), colFirst));
+							_mm_storel_epi64(pTmp, T::work(tmpBase, colFirst));
 							OffsetPtr(pTmp, 8);
 							__m128i colSecond = _mm_add_epi16(subtracted, _mm_srli_si128(multiplied,8));
-							_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), colSecond));
+							_mm_storel_epi64(pTmp, T::work(_mm_srli_si128(tmpBase, 8), colSecond));
 							OffsetPtr(pTmp, 8);
 							col2 = _mm_srli_si128(subtracted,8);
 						}
@@ -1004,11 +1010,11 @@ public:
 							__m128i multiplied = _mm_mulhi_epu16(nexts, ratios);	// col2 * tail/target
 							__m128i subtracted = _mm_sub_epi16(nexts, multiplied);
 							__m128i colFirst = _mm_add_epi16(col2, multiplied);
-							_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), colFirst));
+							_mm_storel_epi64(pTmp, T::work(tmpBase, colFirst));
 							OffsetPtr(pTmp, 8);
 							__m128i sums = _mm_add_epi16(collecteds, multiplied);
 							__m128i colSecond = _mm_add_epi16(subtracted, _mm_srli_si128(sums, 8));
-							_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), colSecond));
+							_mm_storel_epi64(pTmp, T::work(_mm_srli_si128(tmpBase, 8), colSecond));
 							OffsetPtr(pTmp, 8);
 							col2 = _mm_srli_si128(subtracted, 8);
 						}
@@ -1024,10 +1030,10 @@ public:
 							__m128i subtracted = _mm_sub_epi16(nexts, multiplied);
 							__m128i sums = _mm_add_epi16(collecteds, multiplied);
 							__m128i colFirst = _mm_add_epi16(col2, sums);
-							_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), colFirst));
+							_mm_storel_epi64(pTmp, T::work(tmpBase, colFirst));
 							OffsetPtr(pTmp, 8);
 							__m128i colSecond = _mm_add_epi16(subtracted, _mm_srli_si128(sums, 8));
-							_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), colSecond));
+							_mm_storel_epi64(pTmp, T::work(_mm_srli_si128(tmpBase, 8), colSecond));
 							OffsetPtr(pTmp, 8);
 							col2 = _mm_srli_si128(subtracted, 8);
 						}
@@ -1130,6 +1136,7 @@ public:
 						bits >>= 2;
 
 						__m128i abcd = load_unaligned_128(pSrc++);
+						__m128i tmpBase = load_unaligned_128(pTmp);
 						__m128i ratiosSrc = _mm_loadl_epi64((const __m128i*)pWorkTailTargetRatios);
 						OffsetPtr(pWorkTailTargetRatios, 8);
 						ratiosSrc = _mm_unpacklo_epi16(ratiosSrc, ratiosSrc);
@@ -1148,12 +1155,13 @@ public:
 								__m128i ac_subtracted = _mm_sub_epi16(ac, ac_multiplied);
 								
 								__m128i colFirst = _mm_add_epi16(col2, ac_multiplied);
-								_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), colFirst));
+								_mm_storel_epi64(pTmp, T::work(tmpBase, colFirst));
 								OffsetPtr(pTmp, 8);
 								
 								__m128i colSecond = _mm_add_epi16(_mm_add_epi16(ac_subtracted, bd), _mm_srli_si128(ac_multiplied, 8));
-								_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), colSecond));
+								_mm_storel_epi64(pTmp, T::work(_mm_srli_si128(tmpBase, 8), colSecond));
 								OffsetPtr(pTmp, 8);
+								tmpBase = load_unaligned_128(pTmp);
 
 								const __m128i ratios23 = _mm_shuffle_epi32(ratiosSrc, _MM_SHUFFLE(3,3,2,2));
 								__m128i df = _mm_unpackhi_epi64(bd, ef);
@@ -1161,11 +1169,11 @@ public:
 								__m128i df_subtracted = _mm_sub_epi16(df, df_multiplied);
 								
 								__m128i colThird = _mm_add_epi16(_mm_srli_si128(ac_subtracted, 8), df_multiplied);
-								_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), colThird));
+								_mm_storel_epi64(pTmp, T::work(tmpBase, colThird));
 								OffsetPtr(pTmp, 8);
 								
 								__m128i colFourth = _mm_add_epi16(_mm_add_epi16(df_subtracted, ef), _mm_srli_si128(df_multiplied, 8));
-								_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), colFourth));
+								_mm_storel_epi64(pTmp, T::work(_mm_srli_si128(tmpBase, 8), colFourth));
 								OffsetPtr(pTmp, 8);
 								
 								col2 = _mm_srli_si128(df_subtracted, 8);
@@ -1182,12 +1190,13 @@ public:
 								__m128i ab_subtracted = _mm_sub_epi16(ab, ab_multiplied);
 								
 								__m128i colFirst = _mm_add_epi16(col2, ab_multiplied);
-								_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), colFirst));
+								_mm_storel_epi64(pTmp, T::work(tmpBase, colFirst));
 								OffsetPtr(pTmp, 8);
 								
 								__m128i colSecond = _mm_add_epi16(ab_subtracted, _mm_srli_si128(ab_multiplied, 8));
-								_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), colSecond));
+								_mm_storel_epi64(pTmp, T::work(_mm_srli_si128(tmpBase, 8), colSecond));
 								OffsetPtr(pTmp, 8);
+								tmpBase = load_unaligned_128(pTmp);
 								
 								// target is d only
 								const __m128i ratios32 = _mm_shuffle_epi32(ratiosSrc, _MM_SHUFFLE(2,2,3,3));
@@ -1195,7 +1204,7 @@ public:
 								__m128i cd_subtracted = _mm_sub_epi16(cd, cd_multiplied);
 								
 								__m128i colThird = _mm_add_epi16(_mm_srli_si128(_mm_add_epi16(ab_subtracted, cd_multiplied), 8), cd);
-								_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), colThird));
+								_mm_storel_epi64(pTmp, T::work(tmpBase, colThird));
 								OffsetPtr(pTmp, 8);
 								
 								const __m128i ratios4 = set1_epi16_low(*pWorkTailTargetRatios++);
@@ -1207,11 +1216,12 @@ public:
 								__m128i eg_subtracted = _mm_sub_epi16(eg, eg_multiplied);
 								
 								__m128i colFourth = _mm_add_epi16(_mm_srli_si128(cd_subtracted, 8), eg_multiplied);
-								_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), colFourth));
+								_mm_storel_epi64(pTmp, T::work(_mm_srli_si128(tmpBase, 8), colFourth));
 								OffsetPtr(pTmp, 8);
+								tmpBase = _mm_loadl_epi64(pTmp);
 								
 								__m128i colFifth = _mm_add_epi16(_mm_add_epi16(eg_subtracted, fh), _mm_srli_si128(eg_multiplied, 8));
-								_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), colFifth));
+								_mm_storel_epi64(pTmp, T::work(tmpBase, colFifth));
 								OffsetPtr(pTmp, 8);
 								
 								col2 = _mm_srli_si128(eg_subtracted, 8);
@@ -1229,12 +1239,13 @@ public:
 								__m128i ac_subtracted = _mm_sub_epi16(ac, ac_multiplied);
 								
 								__m128i colFirst = _mm_add_epi16(col2, ac_multiplied);
-								_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), colFirst));
+								_mm_storel_epi64(pTmp, T::work(tmpBase, colFirst));
 								OffsetPtr(pTmp, 8);
 								
 								__m128i colSecond = _mm_add_epi16(_mm_add_epi16(ac_subtracted, bd), _mm_srli_si128(ac_multiplied, 8));
-								_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), colSecond));
+								_mm_storel_epi64(pTmp, T::work(_mm_srli_si128(tmpBase, 8), colSecond));
 								OffsetPtr(pTmp, 8);
+								tmpBase = load_unaligned_128(pTmp);
 								
 								// target is d only
 								__m128i ratios32 = _mm_shuffle_epi32(ratiosSrc, _MM_SHUFFLE(2,2,3,3));
@@ -1242,7 +1253,7 @@ public:
 								__m128i bd_subtracted = _mm_sub_epi16(bd, bd_multiplied);
 
 								__m128i colThird = _mm_srli_si128(_mm_add_epi16(ac_subtracted, bd_multiplied), 8);
-								_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), colThird));
+								_mm_storel_epi64(pTmp, T::work(tmpBase, colThird));
 								OffsetPtr(pTmp, 8);
 								
 								__m128i egfh = _mm_shuffle_epi32(efgh, _MM_SHUFFLE(3,1,2,0));
@@ -1255,12 +1266,13 @@ public:
 								col2 = _mm_srli_si128(eg_subtracted, 8);
 								
 								__m128i colFourth = _mm_add_epi16(_mm_srli_si128(bd_subtracted, 8), eg_multiplied);
-								_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), colFourth));
+								_mm_storel_epi64(pTmp, T::work(_mm_srli_si128(tmpBase, 8), colFourth));
 								OffsetPtr(pTmp, 8);
 								
+								tmpBase = _mm_loadl_epi64(pTmp);
 								__m128i fh = _mm_unpackhi_epi8(egfh, _mm_setzero_si128());
 								__m128i colFifth = _mm_add_epi16(eg_subtracted, _mm_add_epi16(fh, _mm_srli_si128(eg_multiplied, 8)));
-								_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), colFifth));
+								_mm_storel_epi64(pTmp, T::work(tmpBase, colFifth));
 								OffsetPtr(pTmp, 8);
 								
 							}
@@ -1275,12 +1287,13 @@ public:
 								__m128i ab_subtracted = _mm_sub_epi16(ab, ab_multiplied);
 								
 								__m128i colFirst = _mm_add_epi16(col2, ab_multiplied);
-								_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), colFirst));
+								_mm_storel_epi64(pTmp, T::work(tmpBase, colFirst));
 								OffsetPtr(pTmp, 8);
 								
 								__m128i colSecond = _mm_add_epi16(ab_subtracted, _mm_srli_si128(ab_multiplied, 8));
-								_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), colSecond));
+								_mm_storel_epi64(pTmp, T::work(_mm_srli_si128(tmpBase, 8), colSecond));
 								OffsetPtr(pTmp, 8);
+								tmpBase = load_unaligned_128(pTmp);
 								
 								__m128i gefh = _mm_shuffle_epi32(efgh, _MM_SHUFFLE(3,1,0,2));
 								__m128i ge = _mm_unpacklo_epi8(gefh, _mm_setzero_si128());
@@ -1292,12 +1305,13 @@ public:
 								__m128i de_subtracted = _mm_sub_epi16(de, de_multiplied);
 
 								__m128i colThird = _mm_add_epi16(_mm_srli_si128(ab_subtracted, 8), _mm_add_epi16(cd, de_multiplied));
-								_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), colThird));
+								_mm_storel_epi64(pTmp, T::work(tmpBase, colThird));
 								OffsetPtr(pTmp, 8);
 								
 								__m128i colForth = _mm_add_epi16(de_subtracted, _mm_srli_si128(de_multiplied, 8));
-								_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), colForth));
+								_mm_storel_epi64(pTmp, T::work(_mm_srli_si128(tmpBase, 8), colForth));
 								OffsetPtr(pTmp, 8);
+								tmpBase = load_unaligned_128(pTmp);
 								
 								const __m128i ratiosOrg = _mm_cvtsi32_si128(*(const int*)pWorkTailTargetRatios);
 								OffsetPtr(pWorkTailTargetRatios, 4);
@@ -1307,11 +1321,11 @@ public:
 								__m128i fh_subtracted = _mm_sub_epi16(fh, fh_multiplied);
 								
 								__m128i colFifth = _mm_add_epi16(_mm_srli_si128(de_subtracted, 8), fh_multiplied);
-								_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), colFifth));
+								_mm_storel_epi64(pTmp, T::work(tmpBase, colFifth));
 								OffsetPtr(pTmp, 8);
 								
 								__m128i colSixth = _mm_add_epi16(_mm_add_epi16(fh_subtracted, ge), _mm_srli_si128(fh_multiplied, 8));
-								_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), colSixth));
+								_mm_storel_epi64(pTmp, T::work(_mm_srli_si128(tmpBase, 8), colSixth));
 								OffsetPtr(pTmp, 8);
 								
 								col2 = _mm_srli_si128(fh_subtracted, 8);
@@ -1327,6 +1341,7 @@ public:
 					ratiosSrc = _mm_unpacklo_epi16(ratiosSrc, ratiosSrc);
 					const __m128i ratios01 = _mm_shuffle_epi32(ratiosSrc, _MM_SHUFFLE(1,1,0,0));
 					__m128i abcd = load_unaligned_128(pSrc++);
+					__m128i tmpBase = load_unaligned_128(pTmp);
 					if (*pBodyCountPatternBits_ & 2) { // 0010
 						__m128i abdc = _mm_shuffle_epi32(abcd, _MM_SHUFFLE(2,3,1,0));
 						__m128i ab = _mm_unpacklo_epi8(abdc, _mm_setzero_si128());
@@ -1335,12 +1350,13 @@ public:
 						__m128i ab_subtracted = _mm_sub_epi16(ab, ab_multiplied);
 
 						__m128i colFirst = _mm_add_epi16(col2, ab_multiplied);
-						_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), colFirst));
+						_mm_storel_epi64(pTmp, T::work(tmpBase, colFirst));
 						OffsetPtr(pTmp, 8);
 						
 						__m128i colSecond = _mm_add_epi16(ab_subtracted, _mm_srli_si128(ab_multiplied, 8));
-						_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), colSecond));
+						_mm_storel_epi64(pTmp, T::work(_mm_srli_si128(tmpBase, 8), colSecond));
 						OffsetPtr(pTmp, 8);
+						tmpBase = load_unaligned_128(pTmp);
 						
 						__m128i ef = _mm_unpacklo_epi8(_mm_loadl_epi64(pSrc), _mm_setzero_si128());
 						OffsetPtr(pSrc, 4);
@@ -1350,13 +1366,13 @@ public:
 						__m128i de = _mm_unpacklo_epi64(dc, ef);
 						__m128i de_multiplied = _mm_mulhi_epu16(de, ratios23);
 						colThird = _mm_add_epi16(colThird, de_multiplied);
-						_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), colThird));
+						_mm_storel_epi64(pTmp, T::work(tmpBase, colThird));
 						OffsetPtr(pTmp, 8);
 						
 						__m128i de_subtracted = _mm_sub_epi16(de, de_multiplied);
 
 						__m128i colFourth = _mm_add_epi16(de_subtracted, _mm_srli_si128(de_multiplied, 8));
-						_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), colFourth));
+						_mm_storel_epi64(pTmp, T::work(_mm_srli_si128(tmpBase, 8), colFourth));
 						OffsetPtr(pTmp, 8);
 
 						col2 = _mm_srli_si128(de_subtracted, 8);
@@ -1369,7 +1385,7 @@ public:
 						__m128i ac_subtracted = _mm_sub_epi16(ac, ac_multiplied);
 						
 						__m128i colFirst = _mm_add_epi16(col2, ac_multiplied);
-						_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), colFirst));
+						_mm_storel_epi64(pTmp, T::work(tmpBase, colFirst));
 						OffsetPtr(pTmp, 8);
 						
 						const __m128i ratios23 = _mm_shuffle_epi32(ratiosSrc, _MM_SHUFFLE(3,3,2,2));
@@ -1377,16 +1393,18 @@ public:
 						__m128i db_subtracted = _mm_sub_epi16(db, db_multiplied);
 						
 						__m128i colSecond = _mm_add_epi16(ac_subtracted, _mm_srli_si128(_mm_add_epi16(db, ac_multiplied), 8));
-						_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), colSecond));
+						_mm_storel_epi64(pTmp, T::work(_mm_srli_si128(tmpBase, 8), colSecond));
 						OffsetPtr(pTmp, 8);
+						tmpBase = _mm_loadl_epi64(pTmp);
 						
 						__m128i colThird = _mm_add_epi16(_mm_srli_si128(ac_subtracted, 8), db_multiplied);
-						_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), colThird));
+						_mm_storel_epi64(pTmp, T::work(tmpBase, colThird));
 						OffsetPtr(pTmp, 8);
 						
 						col2 = _mm_srli_si128(db_subtracted, 8);
 					}
 				}else { // 0
+					__m128i tmpBase = _mm_loadl_epi64(pTmp);
 					__m128i ab = _mm_unpacklo_epi8(_mm_loadl_epi64(pSrc), _mm_setzero_si128());
 					OffsetPtr(pSrc, 4);
 					__m128i ratios = set1_epi16_low(*pWorkTailTargetRatios);
@@ -1395,7 +1413,7 @@ public:
 					__m128i a_subtracted = _mm_sub_epi16(ab, a_multiplied);
 
 					__m128i colFirst = _mm_add_epi16(col2, a_multiplied);
-					_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), colFirst));
+					_mm_storel_epi64(pTmp, T::work(tmpBase, colFirst));
 					OffsetPtr(pTmp, 8);
 					
 					col2 = a_subtracted;
@@ -1474,14 +1492,14 @@ public:
 						innerLoopCount = bodyLoopCountRemainder / 2;
 					}
 					for (uint16_t j=0; j<innerLoopCount; ++j) {
+						__m128i tmpBase = load_unaligned_128(pTmp);
+						__m128i abcd = load_unaligned_128(pSrc++);
 						const uint16_t pattern = bits & 0x3;
 						bits >>= 2;
-
 						__m128i ratiosSrc = _mm_loadl_epi64((const __m128i*)pWorkTailTargetRatios);
 						OffsetPtr(pWorkTailTargetRatios, 8);
 						ratiosSrc = _mm_unpacklo_epi16(ratiosSrc, ratiosSrc);
 						const __m128i ratios01 = _mm_shuffle_epi32(ratiosSrc, _MM_SHUFFLE(1,1,0,0));
-						__m128i abcd = load_unaligned_128(pSrc++);
 
 						switch (pattern) {
 						case 0: // 10 10
@@ -1493,12 +1511,13 @@ public:
 								__m128i bc_subtracted = _mm_sub_epi16(bc, bc_multiplied);
 								
 								__m128i colFirst = _mm_add_epi16(_mm_add_epi16(col2, ad), bc_multiplied);
-								_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), colFirst));
+								_mm_storel_epi64(pTmp, T::work(tmpBase, colFirst));
 								OffsetPtr(pTmp, 8);
 								
 								__m128i colSecond = _mm_add_epi16(bc_subtracted, _mm_srli_si128(bc_multiplied, 8));
-								_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), colSecond));
+								_mm_storel_epi64(pTmp, T::work(_mm_srli_si128(tmpBase, 8), colSecond));
 								OffsetPtr(pTmp, 8);
+								tmpBase = load_unaligned_128(pTmp);
 								
 								__m128i ef = _mm_unpacklo_epi8(_mm_loadl_epi64(pSrc), _mm_setzero_si128());
 								OffsetPtr(pSrc, 8);
@@ -1508,11 +1527,11 @@ public:
 								
 								__m128i colThird = _mm_srli_si128(_mm_add_epi16(bc_subtracted, ad), 8);
 								colThird = _mm_add_epi16(colThird, ef_multiplied);
-								_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), colThird));
+								_mm_storel_epi64(pTmp, T::work(tmpBase, colThird));
 								OffsetPtr(pTmp, 8);
 								
 								__m128i colFourth = _mm_add_epi16(ef_subtracted, _mm_srli_si128(ef_multiplied, 8));
-								_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), colFourth));
+								_mm_storel_epi64(pTmp, T::work(_mm_srli_si128(tmpBase, 8), colFourth));
 								OffsetPtr(pTmp, 8);
 								
 								col2 = _mm_srli_si128(ef_subtracted, 8);
@@ -1530,12 +1549,13 @@ public:
 								
 								__m128i sum_ac_bd_multiplied = _mm_add_epi16(ac, bd_multiplied);
 								__m128i colFirst = _mm_add_epi16(col2, sum_ac_bd_multiplied);
-								_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), colFirst));
+								_mm_storel_epi64(pTmp, T::work(tmpBase, colFirst));
 								OffsetPtr(pTmp, 8);
 								
 								__m128i colSecond = _mm_add_epi16(bd_subtracted, _mm_srli_si128(sum_ac_bd_multiplied, 8));
-								_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), colSecond));
+								_mm_storel_epi64(pTmp, T::work(_mm_srli_si128(tmpBase, 8), colSecond));
 								OffsetPtr(pTmp, 8);
+								tmpBase = load_unaligned_128(pTmp);
 								
 								__m128i egfh = _mm_shuffle_epi32(efgh, _MM_SHUFFLE(3,1,2,0));
 								__m128i eg = _mm_unpacklo_epi8(egfh, _mm_setzero_si128());
@@ -1545,21 +1565,22 @@ public:
 								__m128i eg_subtracted = _mm_sub_epi16(eg, eg_multiplied);
 								
 								__m128i colThird = _mm_add_epi16(_mm_srli_si128(bd_subtracted, 8), eg_multiplied);
-								_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), colThird));
+								_mm_storel_epi64(pTmp, T::work(tmpBase, colThird));
 								OffsetPtr(pTmp, 8);
 
 								__m128i colFourth = _mm_add_epi16(eg_subtracted, fh);
 								colFourth = _mm_add_epi16(colFourth, _mm_srli_si128(eg_multiplied, 8));
-								_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), colFourth));
+								_mm_storel_epi64(pTmp, T::work(_mm_srli_si128(tmpBase, 8), colFourth));
 								OffsetPtr(pTmp, 8);
 								
 								const __m128i ratios5 = set1_epi16_low(*pWorkTailTargetRatios++);
+								tmpBase = _mm_loadl_epi64(pTmp);
 								__m128i h = _mm_srli_si128(fh, 8);
 								__m128i h_multiplied = _mm_mulhi_epu16(h, ratios5);
 								__m128i h_subtracted = _mm_sub_epi16(h, h_multiplied);
 								
 								__m128i colFifth = _mm_add_epi16(_mm_srli_si128(eg_subtracted, 8), h_multiplied);
-								_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), colFifth));
+								_mm_storel_epi64(pTmp, T::work(tmpBase, colFifth));
 								OffsetPtr(pTmp, 8);
 								
 								col2 = h_subtracted;
@@ -1576,12 +1597,13 @@ public:
 								__m128i bc_subtracted = _mm_sub_epi16(bc, bc_multiplied);
 								
 								__m128i colFirst = _mm_add_epi16(col2, _mm_add_epi16(ad, bc_multiplied));
-								_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), colFirst));
+								_mm_storel_epi64(pTmp, T::work(tmpBase, colFirst));
 								OffsetPtr(pTmp, 8);
 								
 								__m128i colSecond = _mm_add_epi16(bc_subtracted, _mm_srli_si128(bc_multiplied, 8));
-								_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), colSecond));
+								_mm_storel_epi64(pTmp, T::work(_mm_srli_si128(tmpBase, 8), colSecond));
 								OffsetPtr(pTmp, 8);
+								tmpBase = load_unaligned_128(pTmp);
 								
 								__m128i gehf = _mm_shuffle_epi32(efgh, _MM_SHUFFLE(1,3,0,2));
 								__m128i ge = _mm_unpacklo_epi8(gehf, _mm_setzero_si128());
@@ -1591,19 +1613,20 @@ public:
 								__m128i ge_subtracted = _mm_sub_epi16(ge, ge_multiplied);
 								
 								__m128i colThird = _mm_srli_si128(_mm_add_epi16(_mm_add_epi16(bc_subtracted, ad), ge_multiplied), 8);
-								_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), colThird));
+								_mm_storel_epi64(pTmp, T::work(tmpBase, colThird));
 								OffsetPtr(pTmp, 8);
 								
 								__m128i colFourth = _mm_add_epi16(_mm_srli_si128(_mm_add_epi16(ge_subtracted, hf), 8), ge_multiplied);
-								_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), colFourth));
+								_mm_storel_epi64(pTmp, T::work(_mm_srli_si128(tmpBase, 8), colFourth));
 								OffsetPtr(pTmp, 8);
 								
 								const __m128i ratios5 = set1_epi16_low(*pWorkTailTargetRatios++);
+								tmpBase = _mm_loadl_epi64(pTmp);
 								__m128i hf_multiplied = _mm_mulhi_epu16(hf, ratios5);
 								__m128i hf_subtracted = _mm_sub_epi16(hf, hf_multiplied);
 								
 								__m128i colFifth = _mm_add_epi16(ge_subtracted, hf_multiplied);
-								_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), colFifth));
+								_mm_storel_epi64(pTmp, T::work(tmpBase, colFifth));
 								OffsetPtr(pTmp, 8);
 								
 								col2 = hf_subtracted;
@@ -1621,12 +1644,13 @@ public:
 								
 								__m128i sum_ac_bd_multiplied = _mm_add_epi16(ac, bd_multiplied);
 								__m128i colFirst = _mm_add_epi16(col2, sum_ac_bd_multiplied);
-								_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), colFirst));
+								_mm_storel_epi64(pTmp, T::work(tmpBase, colFirst));
 								OffsetPtr(pTmp, 8);
 								
 								__m128i colSecond = _mm_add_epi16(bd_subtracted, _mm_srli_si128(sum_ac_bd_multiplied, 8));
-								_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), colSecond));
+								_mm_storel_epi64(pTmp, T::work(_mm_srli_si128(tmpBase, 8), colSecond));
 								OffsetPtr(pTmp, 8);
+								tmpBase = load_unaligned_128(pTmp);
 								
 								__m128i egfh = _mm_shuffle_epi32(efgh, _MM_SHUFFLE(3,1,2,0));
 								__m128i eg = _mm_unpacklo_epi8(egfh, _mm_setzero_si128());
@@ -1636,14 +1660,15 @@ public:
 								__m128i eg_subtracted = _mm_sub_epi16(eg, eg_multiplied);
 								
 								__m128i colThird = _mm_add_epi16(_mm_srli_si128(bd_subtracted, 8), eg_multiplied);
-								_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), colThird));
+								_mm_storel_epi64(pTmp, T::work(tmpBase, colThird));
 								OffsetPtr(pTmp, 8);
 								
 								__m128i sum_eg_subtracted_fh = _mm_add_epi16(eg_subtracted, fh);
 
 								__m128i colForth = _mm_add_epi16(sum_eg_subtracted_fh, _mm_srli_si128(eg_multiplied, 8));
-								_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), colForth));
+								_mm_storel_epi64(pTmp, T::work(_mm_srli_si128(tmpBase, 8), colForth));
 								OffsetPtr(pTmp, 8);
+								tmpBase = load_unaligned_128(pTmp);
 								
 								__m128i ij = _mm_unpacklo_epi8(_mm_loadl_epi64(pSrc), _mm_setzero_si128());
 								OffsetPtr(pSrc, 8);
@@ -1655,11 +1680,11 @@ public:
 								__m128i ij_subtracted = _mm_sub_epi16(ij, ij_multiplied);
 								
 								__m128i colFifth = _mm_add_epi16(_mm_srli_si128(sum_eg_subtracted_fh, 8), ij_multiplied);
-								_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), colFifth));
+								_mm_storel_epi64(pTmp, T::work(tmpBase, colFifth));
 								OffsetPtr(pTmp, 8);
 								
 								__m128i colSixth = _mm_add_epi16(ij_subtracted, _mm_srli_si128(ij_multiplied, 8));
-								_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), colSixth));
+								_mm_storel_epi64(pTmp, T::work(_mm_srli_si128(tmpBase, 8), colSixth));
 								OffsetPtr(pTmp, 8);
 								
 								col2 = _mm_srli_si128(ij_subtracted, 8);
@@ -1671,10 +1696,14 @@ public:
 					}
 				}
 				if (bodyLoopCountRemainder & 1) {
+					__m128i tmpBase = load_unaligned_128(pTmp);
 					__m128i ratiosSrc = _mm_loadl_epi64((const __m128i*)pWorkTailTargetRatios);
-					ratiosSrc = _mm_unpacklo_epi16(ratiosSrc, ratiosSrc);
 					__m128i abcd = load_unaligned_128(pSrc++);
+					ratiosSrc = _mm_unpacklo_epi16(ratiosSrc, ratiosSrc);
 					if (*pBodyCountPatternBits_ & 2) { // 1101
+						__m128i efgh = load_unaligned_128(pSrc); // preload
+						OffsetPtr(pSrc, 12);
+						
 						__m128i acbd = _mm_shuffle_epi32(abcd, _MM_SHUFFLE(3,1,2,0));
 						__m128i ac = _mm_unpacklo_epi8(acbd, _mm_setzero_si128());
 						__m128i bd = _mm_unpackhi_epi8(acbd, _mm_setzero_si128());
@@ -1684,15 +1713,14 @@ public:
 
 						__m128i sum_ac_bd_multiplied = _mm_add_epi16(ac, bd_multiplied);
 						__m128i colFirst = _mm_add_epi16(col2, sum_ac_bd_multiplied);
-						_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), colFirst));
+						_mm_storel_epi64(pTmp, T::work(tmpBase, colFirst));
 						OffsetPtr(pTmp, 8);
 						
 						__m128i colSecond = _mm_add_epi16(bd_subtracted, _mm_srli_si128(sum_ac_bd_multiplied, 8));
-						_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), colSecond));
+						_mm_storel_epi64(pTmp, T::work(_mm_srli_si128(tmpBase, 8), colSecond));
 						OffsetPtr(pTmp, 8);
-
-						__m128i efgh = load_unaligned_128(pSrc);
-						OffsetPtr(pSrc, 12);
+						tmpBase = load_unaligned_128(pTmp);
+						
 						__m128i egfh = _mm_shuffle_epi32(efgh, _MM_SHUFFLE(3,1,2,0));
 						__m128i eg = _mm_unpacklo_epi8(egfh, _mm_setzero_si128());
 						__m128i fh = _mm_unpackhi_epi8(egfh, _mm_setzero_si128());
@@ -1701,17 +1729,20 @@ public:
 						__m128i eg_subtracted = _mm_sub_epi16(eg, eg_multiplied);
 						
 						__m128i colThird = _mm_add_epi16(_mm_srli_si128(bd_subtracted, 8), eg_multiplied);
-						_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), colThird));
+						_mm_storel_epi64(pTmp, T::work(tmpBase, colThird));
 						OffsetPtr(pTmp, 8);
 
 						__m128i colFourth = _mm_add_epi16(eg_subtracted, fh);
 						colFourth = _mm_add_epi16(colFourth, _mm_srli_si128(eg_multiplied, 8));
-						_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), colFourth));
+						_mm_storel_epi64(pTmp, T::work(_mm_srli_si128(tmpBase, 8), colFourth));
 						OffsetPtr(pTmp, 8);
 
 						col2 = _mm_srli_si128(eg_subtracted, 8);
 						
 					}else { // 101
+						__m128i ef = _mm_unpacklo_epi8(_mm_loadl_epi64(pSrc), _mm_setzero_si128()); // preload
+						OffsetPtr(pSrc, 4);
+						
 						__m128i adbc = _mm_shuffle_epi32(abcd, _MM_SHUFFLE(2,1,3,0));
 						__m128i ad = _mm_unpacklo_epi8(adbc, _mm_setzero_si128());
 						__m128i bc = _mm_unpackhi_epi8(adbc, _mm_setzero_si128());
@@ -1720,22 +1751,21 @@ public:
 						__m128i bc_subtracted = _mm_sub_epi16(bc, bc_multiplied);
 						
 						__m128i colFirst = _mm_add_epi16(_mm_add_epi16(col2, ad), bc_multiplied);
-						_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), colFirst));
+						_mm_storel_epi64(pTmp, T::work(tmpBase, colFirst));
 						OffsetPtr(pTmp, 8);
 						
 						__m128i colSecond = _mm_add_epi16(bc_subtracted, _mm_srli_si128(bc_multiplied, 8));
-						_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), colSecond));
+						_mm_storel_epi64(pTmp, T::work(_mm_srli_si128(tmpBase, 8), colSecond));
 						OffsetPtr(pTmp, 8);
+						tmpBase = _mm_loadl_epi64(pTmp);
 						
-						__m128i ef = _mm_unpacklo_epi8(_mm_loadl_epi64(pSrc), _mm_setzero_si128());
-						OffsetPtr(pSrc, 4);
 						const __m128i ratios23 = _mm_shuffle_epi32(ratiosSrc, _MM_SHUFFLE(3,3,2,2));
 						__m128i ef_multiplied = _mm_mulhi_epu16(ef, ratios23);
 						__m128i ef_subtracted = _mm_sub_epi16(ef, ef_multiplied);
 						
 						__m128i colThird = _mm_srli_si128(_mm_add_epi16(bc_subtracted, ad), 8);
 						colThird = _mm_add_epi16(colThird, ef_multiplied);
-						_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), colThird));
+						_mm_storel_epi64(pTmp, T::work(tmpBase, colThird));
 						OffsetPtr(pTmp, 8);
 						
 						col2 = ef_subtracted;
@@ -1744,13 +1774,14 @@ public:
 					__m128i ab = _mm_unpacklo_epi8(_mm_loadl_epi64(pSrc), _mm_setzero_si128());
 					OffsetPtr(pSrc, 8);
 					__m128i ratios = set1_epi16_low(*pWorkTailTargetRatios);
+					__m128i tmpBase = _mm_loadl_epi64(pTmp);
 					
 					__m128i b = _mm_srli_si128(ab, 8);
 					__m128i b_multiplied = _mm_mulhi_epu16(b, ratios);
 					__m128i b_subtracted = _mm_sub_epi16(b, b_multiplied);
 
 					__m128i colFirst = _mm_add_epi16(_mm_add_epi16(col2, ab), b_multiplied);
-					_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), colFirst));
+					_mm_storel_epi64(pTmp, T::work(tmpBase, colFirst));
 					OffsetPtr(pTmp, 8);
 					
 					col2 = b_subtracted;
