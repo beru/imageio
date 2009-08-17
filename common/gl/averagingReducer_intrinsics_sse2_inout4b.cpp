@@ -1065,6 +1065,354 @@ public:
 	}
 };
 
+class LineAveragingReducer_RatioAny_MoreThanHalf_01_001 : public LineAveragingReducer_RatioAny_Base
+{
+private:
+	const uint32_t* pBodyCountPatternBits_;
+	const uint16_t* pTailTargetRatios_;
+
+public:
+	uint16_t bodyCountPatternBitsCount_;
+
+	ILineAveragingReducer_Impl;
+
+	LineAveragingReducer_RatioAny_MoreThanHalf_01_001(const uint32_t* pBodyCountPatternBits, const uint16_t* pTailTargetRatios)
+		:
+		pBodyCountPatternBits_(pBodyCountPatternBits),
+		pTailTargetRatios_(pTailTargetRatios)
+	{
+	}
+	
+	template <typename T>
+	void iterate(const __m128i* srcBuff, __m128i* tmpBuff)
+	{
+		const __m128i* pSrc = srcBuff;
+		__m128i* pTmp = tmpBuff;
+
+		const uint16_t srcRatio = srcRatio_;
+		const uint16_t targetRatio = targetRatio_;
+		const uint16_t srcWidth = srcWidth_;
+		const uint16_t remainderRatio = srcRatio - targetRatio;
+		const __m128i remainderDividedByTargetRatio = make_vec_ratios(remainderRatio << 16, targetRatio);
+
+		const uint16_t blockCount = srcWidth/srcRatio;
+		for (uint16_t blockIdx=0; blockIdx<blockCount; ++blockIdx) {
+			__m128i col2;
+			// head
+			{
+				__m128i col;
+				CollectSumAndNext1_2or1::work(pSrc, 1, 0, col, col2);
+				// srcRatio data straddles targetRatio's tail and next head
+				__m128i col2a = _mm_mulhi_epu16(col2, remainderDividedByTargetRatio);
+				col = _mm_add_epi16(col, col2a);
+				col2 = _mm_sub_epi16(col2, col2a);
+				_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), col));
+				OffsetPtr(pTmp, 8);
+			}
+			// body
+			{
+				const uint32_t* pWorkBits = pBodyCountPatternBits_;
+				const uint16_t* pWorkTailTargetRatios = pTailTargetRatios_;
+
+				const uint16_t bodyLoopCount = bodyCountPatternBitsCount_ - 1;
+				const uint16_t bodyLoopCountQuotient = bodyLoopCount / 32;
+				const uint16_t bodyLoopCountRemainder = bodyLoopCount % 32;
+				const uint16_t remainLoopCount = (bodyLoopCountRemainder > 1) ? 1 : 0;
+				const uint16_t patternLoopCount = bodyLoopCountQuotient + remainLoopCount;
+				for (uint16_t i=0; i<patternLoopCount; ++i) {
+					uint32_t bits = *pWorkBits++;
+					uint16_t innerLoopCount = 32/2;
+					if (i == patternLoopCount-1 && remainLoopCount) {
+						innerLoopCount = bodyLoopCountRemainder / 2;
+					}
+					for (uint16_t j=0; j<innerLoopCount; ++j) {
+						const uint16_t pattern = bits & 0x3;
+						bits >>= 2;
+
+						__m128i abcd = load_unaligned_128(pSrc++);
+						__m128i ratiosSrc = _mm_loadl_epi64((const __m128i*)pWorkTailTargetRatios);
+						OffsetPtr(pWorkTailTargetRatios, 8);
+						ratiosSrc = _mm_unpacklo_epi16(ratiosSrc, ratiosSrc);
+						const __m128i ratios01 = _mm_shuffle_epi32(ratiosSrc, _MM_SHUFFLE(1,1,0,0));
+
+						switch (pattern) {
+						case 0: // 01 01
+							{
+								__m128i ef = _mm_unpacklo_epi8(_mm_loadl_epi64(pSrc), _mm_setzero_si128()); // preload
+								OffsetPtr(pSrc, 8);
+
+								__m128i acbd = _mm_shuffle_epi32(abcd, _MM_SHUFFLE(3,1,2,0));
+								__m128i ac = _mm_unpacklo_epi8(acbd, _mm_setzero_si128());
+								__m128i bd = _mm_unpackhi_epi8(acbd, _mm_setzero_si128());
+								__m128i ac_multiplied = _mm_mulhi_epu16(ac, ratios01);
+								__m128i ac_subtracted = _mm_sub_epi16(ac, ac_multiplied);
+								
+								__m128i colFirst = _mm_add_epi16(col2, ac_multiplied);
+								_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), colFirst));
+								OffsetPtr(pTmp, 8);
+								
+								__m128i colSecond = _mm_add_epi16(_mm_add_epi16(ac_subtracted, bd), _mm_srli_si128(ac_multiplied, 8));
+								_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), colSecond));
+								OffsetPtr(pTmp, 8);
+
+								const __m128i ratios23 = _mm_shuffle_epi32(ratiosSrc, _MM_SHUFFLE(3,3,2,2));
+								__m128i df = _mm_unpackhi_epi64(bd, ef);
+								__m128i df_multiplied = _mm_mulhi_epu16(df, ratios23);
+								__m128i df_subtracted = _mm_sub_epi16(df, df_multiplied);
+								
+								__m128i colThird = _mm_add_epi16(_mm_srli_si128(ac_subtracted, 8), df_multiplied);
+								_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), colThird));
+								OffsetPtr(pTmp, 8);
+								
+								__m128i colFourth = _mm_add_epi16(_mm_add_epi16(df_subtracted, ef), _mm_srli_si128(df_multiplied, 8));
+								_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), colFourth));
+								OffsetPtr(pTmp, 8);
+								
+								col2 = _mm_srli_si128(df_subtracted, 8);
+							}
+							break;
+						case 1: // 001 01
+							{
+								__m128i efgh = load_unaligned_128(pSrc);	// preload
+								OffsetPtr(pSrc, 12);
+
+								__m128i ab = _mm_unpacklo_epi8(abcd, _mm_setzero_si128());
+								__m128i cd = _mm_unpackhi_epi8(abcd, _mm_setzero_si128());
+								__m128i ab_multiplied = _mm_mulhi_epu16(ab, ratios01);
+								__m128i ab_subtracted = _mm_sub_epi16(ab, ab_multiplied);
+								
+								__m128i colFirst = _mm_add_epi16(col2, ab_multiplied);
+								_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), colFirst));
+								OffsetPtr(pTmp, 8);
+								
+								__m128i colSecond = _mm_add_epi16(ab_subtracted, _mm_srli_si128(ab_multiplied, 8));
+								_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), colSecond));
+								OffsetPtr(pTmp, 8);
+								
+								// target is d only
+								const __m128i ratios32 = _mm_shuffle_epi32(ratiosSrc, _MM_SHUFFLE(2,2,3,3));
+								__m128i cd_multiplied = _mm_mulhi_epu16(cd, ratios32);
+								__m128i cd_subtracted = _mm_sub_epi16(cd, cd_multiplied);
+								
+								__m128i colThird = _mm_add_epi16(_mm_srli_si128(_mm_add_epi16(ab_subtracted, cd_multiplied), 8), cd);
+								_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), colThird));
+								OffsetPtr(pTmp, 8);
+								
+								const __m128i ratios4 = set1_epi16_low(*pWorkTailTargetRatios++);
+								__m128i ratio34 = _mm_unpacklo_epi64(ratios32, ratios4);
+								__m128i egfh = _mm_shuffle_epi32(efgh, _MM_SHUFFLE(3,1,2,0));
+								__m128i eg = _mm_unpacklo_epi8(egfh, _mm_setzero_si128());
+								__m128i fh = _mm_unpackhi_epi8(egfh, _mm_setzero_si128());
+								__m128i eg_multiplied = _mm_mulhi_epu16(eg, ratio34);
+								__m128i eg_subtracted = _mm_sub_epi16(eg, eg_multiplied);
+								
+								__m128i colFourth = _mm_add_epi16(_mm_srli_si128(cd_subtracted, 8), eg_multiplied);
+								_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), colFourth));
+								OffsetPtr(pTmp, 8);
+								
+								__m128i colFifth = _mm_add_epi16(_mm_add_epi16(eg_subtracted, fh), _mm_srli_si128(eg_multiplied, 8));
+								_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), colFifth));
+								OffsetPtr(pTmp, 8);
+								
+								col2 = _mm_srli_si128(eg_subtracted, 8);
+							}
+							break;
+						case 2: // 01 001
+							{
+								__m128i efgh = load_unaligned_128(pSrc);	// preload
+								OffsetPtr(pSrc, 12);
+								
+								__m128i acbd = _mm_shuffle_epi32(abcd, _MM_SHUFFLE(3,1,2,0));
+								__m128i ac = _mm_unpacklo_epi8(acbd, _mm_setzero_si128());
+								__m128i bd = _mm_unpackhi_epi8(acbd, _mm_setzero_si128());
+								__m128i ac_multiplied = _mm_mulhi_epu16(ac, ratios01);
+								__m128i ac_subtracted = _mm_sub_epi16(ac, ac_multiplied);
+								
+								__m128i colFirst = _mm_add_epi16(col2, ac_multiplied);
+								_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), colFirst));
+								OffsetPtr(pTmp, 8);
+								
+								__m128i colSecond = _mm_add_epi16(_mm_add_epi16(ac_subtracted, bd), _mm_srli_si128(ac_multiplied, 8));
+								_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), colSecond));
+								OffsetPtr(pTmp, 8);
+								
+								// target is d only
+								__m128i ratios32 = _mm_shuffle_epi32(ratiosSrc, _MM_SHUFFLE(2,2,3,3));
+								__m128i bd_multiplied = _mm_mulhi_epu16(bd, ratios32);
+								__m128i bd_subtracted = _mm_sub_epi16(bd, bd_multiplied);
+
+								__m128i colThird = _mm_srli_si128(_mm_add_epi16(ac_subtracted, bd_multiplied), 8);
+								_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), colThird));
+								OffsetPtr(pTmp, 8);
+								
+								__m128i egfh = _mm_shuffle_epi32(efgh, _MM_SHUFFLE(3,1,2,0));
+								__m128i eg = _mm_unpacklo_epi8(egfh, _mm_setzero_si128());
+
+								__m128i ratios4 = set1_epi16_low(*pWorkTailTargetRatios++);
+								__m128i ratios34 = _mm_unpacklo_epi64(ratios32, ratios4);
+								__m128i eg_multiplied = _mm_mulhi_epu16(eg, ratios34);
+								__m128i eg_subtracted = _mm_sub_epi16(eg, eg_multiplied);
+								col2 = _mm_srli_si128(eg_subtracted, 8);
+								
+								__m128i colFourth = _mm_add_epi16(_mm_srli_si128(bd_subtracted, 8), eg_multiplied);
+								_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), colFourth));
+								OffsetPtr(pTmp, 8);
+								
+								__m128i fh = _mm_unpackhi_epi8(egfh, _mm_setzero_si128());
+								__m128i colFifth = _mm_add_epi16(eg_subtracted, _mm_add_epi16(fh, _mm_srli_si128(eg_multiplied, 8)));
+								_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), colFifth));
+								OffsetPtr(pTmp, 8);
+								
+							}
+							break;
+						case 3: // 001 001
+							{
+								__m128i efgh = load_unaligned_128(pSrc++); // preload
+
+								__m128i ab = _mm_unpacklo_epi8(abcd, _mm_setzero_si128());
+								__m128i cd = _mm_unpackhi_epi8(abcd, _mm_setzero_si128());
+								__m128i ab_multiplied = _mm_mulhi_epu16(ab, ratios01);
+								__m128i ab_subtracted = _mm_sub_epi16(ab, ab_multiplied);
+								
+								__m128i colFirst = _mm_add_epi16(col2, ab_multiplied);
+								_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), colFirst));
+								OffsetPtr(pTmp, 8);
+								
+								__m128i colSecond = _mm_add_epi16(ab_subtracted, _mm_srli_si128(ab_multiplied, 8));
+								_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), colSecond));
+								OffsetPtr(pTmp, 8);
+								
+								__m128i gefh = _mm_shuffle_epi32(efgh, _MM_SHUFFLE(3,1,0,2));
+								__m128i ge = _mm_unpacklo_epi8(gefh, _mm_setzero_si128());
+								__m128i fh = _mm_unpackhi_epi8(gefh, _mm_setzero_si128());
+								
+								__m128i de = _mm_unpackhi_epi64(cd, ge);
+								const __m128i ratios23 = _mm_shuffle_epi32(ratiosSrc, _MM_SHUFFLE(3,3,2,2));
+								__m128i de_multiplied = _mm_mulhi_epu16(de, ratios23);
+								__m128i de_subtracted = _mm_sub_epi16(de, de_multiplied);
+
+								__m128i colThird = _mm_add_epi16(_mm_srli_si128(ab_subtracted, 8), _mm_add_epi16(cd, de_multiplied));
+								_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), colThird));
+								OffsetPtr(pTmp, 8);
+								
+								__m128i colForth = _mm_add_epi16(de_subtracted, _mm_srli_si128(de_multiplied, 8));
+								_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), colForth));
+								OffsetPtr(pTmp, 8);
+								
+								const __m128i ratiosOrg = _mm_cvtsi32_si128(*(const int*)pWorkTailTargetRatios);
+								OffsetPtr(pWorkTailTargetRatios, 4);
+								const __m128i ratiosTmp = _mm_shufflelo_epi16(ratiosOrg, _MM_SHUFFLE(1,1,0,0));
+								const __m128i ratios45 = _mm_shuffle_epi32(ratiosTmp, _MM_SHUFFLE(1,1,0,0));
+								__m128i fh_multiplied = _mm_mulhi_epu16(fh, ratios45);
+								__m128i fh_subtracted = _mm_sub_epi16(fh, fh_multiplied);
+								
+								__m128i colFifth = _mm_add_epi16(_mm_srli_si128(de_subtracted, 8), fh_multiplied);
+								_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), colFifth));
+								OffsetPtr(pTmp, 8);
+								
+								__m128i colSixth = _mm_add_epi16(_mm_add_epi16(fh_subtracted, ge), _mm_srli_si128(fh_multiplied, 8));
+								_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), colSixth));
+								OffsetPtr(pTmp, 8);
+								
+								col2 = _mm_srli_si128(fh_subtracted, 8);
+							}
+							break;
+						default:
+							__assume(false);
+						}
+					}
+				}
+				if (bodyLoopCountRemainder & 1) {
+					__m128i ratiosSrc = _mm_loadl_epi64((const __m128i*)pWorkTailTargetRatios);
+					ratiosSrc = _mm_unpacklo_epi16(ratiosSrc, ratiosSrc);
+					const __m128i ratios01 = _mm_shuffle_epi32(ratiosSrc, _MM_SHUFFLE(1,1,0,0));
+					__m128i abcd = load_unaligned_128(pSrc++);
+					if (*pBodyCountPatternBits_ & 2) { // 0010
+						__m128i abdc = _mm_shuffle_epi32(abcd, _MM_SHUFFLE(2,3,1,0));
+						__m128i ab = _mm_unpacklo_epi8(abdc, _mm_setzero_si128());
+						__m128i dc = _mm_unpackhi_epi8(abdc, _mm_setzero_si128());
+						__m128i ab_multiplied = _mm_mulhi_epu16(ab, ratios01);
+						__m128i ab_subtracted = _mm_sub_epi16(ab, ab_multiplied);
+
+						__m128i colFirst = _mm_add_epi16(col2, ab_multiplied);
+						_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), colFirst));
+						OffsetPtr(pTmp, 8);
+						
+						__m128i colSecond = _mm_add_epi16(ab_subtracted, _mm_srli_si128(ab_multiplied, 8));
+						_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), colSecond));
+						OffsetPtr(pTmp, 8);
+						
+						__m128i ef = _mm_unpacklo_epi8(_mm_loadl_epi64(pSrc), _mm_setzero_si128());
+						OffsetPtr(pSrc, 4);
+						const __m128i ratios23 = _mm_shuffle_epi32(ratiosSrc, _MM_SHUFFLE(3,3,2,2));
+						__m128i colThird = _mm_srli_si128(_mm_add_epi16(ab_subtracted, dc), 8);
+						
+						__m128i de = _mm_unpacklo_epi64(dc, ef);
+						__m128i de_multiplied = _mm_mulhi_epu16(de, ratios23);
+						colThird = _mm_add_epi16(colThird, de_multiplied);
+						_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), colThird));
+						OffsetPtr(pTmp, 8);
+						
+						__m128i de_subtracted = _mm_sub_epi16(de, de_multiplied);
+
+						__m128i colFourth = _mm_add_epi16(de_subtracted, _mm_srli_si128(de_multiplied, 8));
+						_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), colFourth));
+						OffsetPtr(pTmp, 8);
+
+						col2 = _mm_srli_si128(de_subtracted, 8);
+						
+					}else { // 010
+						__m128i acdb = _mm_shuffle_epi32(abcd, _MM_SHUFFLE(1,3,2,0));
+						__m128i ac = _mm_unpacklo_epi8(acdb, _mm_setzero_si128());
+						__m128i db = _mm_unpackhi_epi8(acdb, _mm_setzero_si128());
+						__m128i ac_multiplied = _mm_mulhi_epu16(ac, ratios01);
+						__m128i ac_subtracted = _mm_sub_epi16(ac, ac_multiplied);
+						
+						__m128i colFirst = _mm_add_epi16(col2, ac_multiplied);
+						_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), colFirst));
+						OffsetPtr(pTmp, 8);
+						
+						const __m128i ratios23 = _mm_shuffle_epi32(ratiosSrc, _MM_SHUFFLE(3,3,2,2));
+						__m128i db_multiplied = _mm_mulhi_epu16(db, ratios23);
+						__m128i db_subtracted = _mm_sub_epi16(db, db_multiplied);
+						
+						__m128i colSecond = _mm_add_epi16(ac_subtracted, _mm_srli_si128(_mm_add_epi16(db, ac_multiplied), 8));
+						_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), colSecond));
+						OffsetPtr(pTmp, 8);
+						
+						__m128i colThird = _mm_add_epi16(_mm_srli_si128(ac_subtracted, 8), db_multiplied);
+						_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), colThird));
+						OffsetPtr(pTmp, 8);
+						
+						col2 = _mm_srli_si128(db_subtracted, 8);
+					}
+				}else { // 0
+					__m128i ab = _mm_unpacklo_epi8(_mm_loadl_epi64(pSrc), _mm_setzero_si128());
+					OffsetPtr(pSrc, 4);
+					__m128i ratios = set1_epi16_low(*pWorkTailTargetRatios);
+					
+					__m128i a_multiplied = _mm_mulhi_epu16(ab, ratios);
+					__m128i a_subtracted = _mm_sub_epi16(ab, a_multiplied);
+
+					__m128i colFirst = _mm_add_epi16(col2, a_multiplied);
+					_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), colFirst));
+					OffsetPtr(pTmp, 8);
+					
+					col2 = a_subtracted;
+				}
+			}
+			// tail
+			{
+				__m128i col = col2;
+				col = _mm_add_epi16(col, CollectSum_1(pSrc));
+				OffsetPtr(pSrc, 4);
+				_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), col));
+				OffsetPtr(pTmp, 8);
+			}
+		}
+	}
+};
+
 class LineAveragingReducer_RatioAny_MoreThanHalf_10_110 : public LineAveragingReducer_RatioAny_Base
 {
 private:
@@ -1132,6 +1480,7 @@ public:
 						__m128i ratiosSrc = _mm_loadl_epi64((const __m128i*)pWorkTailTargetRatios);
 						OffsetPtr(pWorkTailTargetRatios, 8);
 						ratiosSrc = _mm_unpacklo_epi16(ratiosSrc, ratiosSrc);
+						const __m128i ratios01 = _mm_shuffle_epi32(ratiosSrc, _MM_SHUFFLE(1,1,0,0));
 						__m128i abcd = load_unaligned_128(pSrc++);
 
 						switch (pattern) {
@@ -1140,7 +1489,6 @@ public:
 								__m128i adbc = _mm_shuffle_epi32(abcd, _MM_SHUFFLE(2,1,3,0));
 								__m128i ad = _mm_unpacklo_epi8(adbc, _mm_setzero_si128());
 								__m128i bc = _mm_unpackhi_epi8(adbc, _mm_setzero_si128());
-								const __m128i ratios01 = _mm_shuffle_epi32(ratiosSrc, _MM_SHUFFLE(1,1,0,0));
 								__m128i bc_multiplied = _mm_mulhi_epu16(bc, ratios01);
 								__m128i bc_subtracted = _mm_sub_epi16(bc, bc_multiplied);
 								
@@ -1172,10 +1520,11 @@ public:
 							break;
 						case 1: // 110 10
 							{
+								__m128i efgh = load_unaligned_128(pSrc++);	// preload
+								
 								__m128i acbd = _mm_shuffle_epi32(abcd, _MM_SHUFFLE(3,1,2,0));
 								__m128i ac = _mm_unpacklo_epi8(acbd, _mm_setzero_si128());
 								__m128i bd = _mm_unpackhi_epi8(acbd, _mm_setzero_si128());
-								const __m128i ratios01 = _mm_shuffle_epi32(ratiosSrc, _MM_SHUFFLE(1,1,0,0));
 								__m128i bd_multiplied = _mm_mulhi_epu16(bd, ratios01);
 								__m128i bd_subtracted = _mm_sub_epi16(bd, bd_multiplied);
 								
@@ -1188,7 +1537,6 @@ public:
 								_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), colSecond));
 								OffsetPtr(pTmp, 8);
 								
-								__m128i efgh = load_unaligned_128(pSrc++);
 								__m128i egfh = _mm_shuffle_epi32(efgh, _MM_SHUFFLE(3,1,2,0));
 								__m128i eg = _mm_unpacklo_epi8(egfh, _mm_setzero_si128());
 								__m128i fh = _mm_unpackhi_epi8(egfh, _mm_setzero_si128());
@@ -1219,10 +1567,11 @@ public:
 							break;
 						case 2: // 10 110
 							{
+								__m128i efgh = load_unaligned_128(pSrc++); // preload
+
 								__m128i adbc = _mm_shuffle_epi32(abcd, _MM_SHUFFLE(2,1,3,0));
 								__m128i ad = _mm_unpacklo_epi8(adbc, _mm_setzero_si128());
 								__m128i bc = _mm_unpackhi_epi8(adbc, _mm_setzero_si128());
-								const __m128i ratios01 = _mm_shuffle_epi32(ratiosSrc, _MM_SHUFFLE(1,1,0,0));
 								__m128i bc_multiplied = _mm_mulhi_epu16(bc, ratios01);
 								__m128i bc_subtracted = _mm_sub_epi16(bc, bc_multiplied);
 								
@@ -1234,7 +1583,6 @@ public:
 								_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), colSecond));
 								OffsetPtr(pTmp, 8);
 								
-								__m128i efgh = load_unaligned_128(pSrc++);
 								__m128i gehf = _mm_shuffle_epi32(efgh, _MM_SHUFFLE(1,3,0,2));
 								__m128i ge = _mm_unpacklo_epi8(gehf, _mm_setzero_si128());
 								__m128i hf = _mm_unpackhi_epi8(gehf, _mm_setzero_si128());
@@ -1263,10 +1611,11 @@ public:
 							break;
 						case 3: // 110 110
 							{
+								__m128i efgh = load_unaligned_128(pSrc++); // preload
+
 								__m128i acbd = _mm_shuffle_epi32(abcd, _MM_SHUFFLE(3,1,2,0));
 								__m128i ac = _mm_unpacklo_epi8(acbd, _mm_setzero_si128());
 								__m128i bd = _mm_unpackhi_epi8(acbd, _mm_setzero_si128());
-								const __m128i ratios01 = _mm_shuffle_epi32(ratiosSrc, _MM_SHUFFLE(1,1,0,0));
 								__m128i bd_multiplied = _mm_mulhi_epu16(bd, ratios01);
 								__m128i bd_subtracted = _mm_sub_epi16(bd, bd_multiplied);
 								
@@ -1279,7 +1628,6 @@ public:
 								_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), colSecond));
 								OffsetPtr(pTmp, 8);
 								
-								__m128i efgh = load_unaligned_128(pSrc++);
 								__m128i egfh = _mm_shuffle_epi32(efgh, _MM_SHUFFLE(3,1,2,0));
 								__m128i eg = _mm_unpacklo_epi8(egfh, _mm_setzero_si128());
 								__m128i fh = _mm_unpackhi_epi8(egfh, _mm_setzero_si128());
@@ -1741,6 +2089,7 @@ private:
 	LineAveragingReducer_RatioAny_Basic<CollectSumAndNext1_1or0, CollectSumAndNext1_2or1, CollectSum_2or1> lar_RatioAny_Basic_1;
 	LineAveragingReducer_RatioAny_MoreThanHalf lar_RatioAny_MoreThanHalf;
 	LineAveragingReducer_RatioAny_MoreThanHalf_10_110 lar_RatioAny_MoreThanHalf_10_110;
+	LineAveragingReducer_RatioAny_MoreThanHalf_01_001 lar_RatioAny_MoreThanHalf_01_001;
 
 	enum BodyCountPatternType
 	{
@@ -1885,7 +2234,8 @@ AveragingReducer::AveragingReducer()
 	lar_RatioAny_Basic_2(bodyCountBits_, tailTargetRatios_),
 	lar_RatioAny_Basic_1(bodyCountBits_, tailTargetRatios_),
 	lar_RatioAny_MoreThanHalf(bodyCounts_, tailTargetRatios_),
-	lar_RatioAny_MoreThanHalf_10_110(bodyCountPatternBits_, tailTargetRatios_)
+	lar_RatioAny_MoreThanHalf_10_110(bodyCountPatternBits_, tailTargetRatios_),
+	lar_RatioAny_MoreThanHalf_01_001(bodyCountPatternBits_, tailTargetRatios_)
 {
 }
 
@@ -2002,6 +2352,13 @@ void AveragingReducer::Setup(const AveragingReduceParams* pParams, uint16_t part
 				lar_RatioAny_MoreThanHalf_10_110.bodyCountPatternBitsCount_ = bodyCountPatternBitsCount;
 				pLineAveragingReducer = &lar_RatioAny_MoreThanHalf_10_110;
 				break;
+			case BodyCountPatternType_01_001:
+				lar_RatioAny_MoreThanHalf_01_001.srcRatio_ = params.widthRatioSource;
+				lar_RatioAny_MoreThanHalf_01_001.targetRatio_ = params.widthRatioTarget;
+				lar_RatioAny_MoreThanHalf_01_001.srcWidth_ = params.srcWidth;
+				lar_RatioAny_MoreThanHalf_01_001.bodyCountPatternBitsCount_ = bodyCountPatternBitsCount;
+				pLineAveragingReducer = &lar_RatioAny_MoreThanHalf_01_001;
+				break;
 			case BodyCountPatternType_Other:
 			default:
 				lar_RatioAny_MoreThanHalf.srcRatio_ = params.widthRatioSource;
@@ -2068,7 +2425,7 @@ void AveragingReducer::Process_Ratio1NX(ILineAveragingReducer& lineReducer, uint
 			p0 = _mm_mulhi_epu16(p0, invertRatioSource);
 			p1 = _mm_mulhi_epu16(p1, invertRatioSource);
 			// 16 -> 8
-			targetLine[x] = _mm_packus_epi16(p0, p1);
+			_mm_stream_si128(targetLine+x, _mm_packus_epi16(p0, p1));
 		}
 		OffsetPtr(targetLine, params.targetLineOffsetBytes);
 	}
@@ -2097,7 +2454,7 @@ void StoreToTarget(
 		__m128i p1 = _mm_mulhi_epu16(twoPixels1, hvTargetSrcRatio);
 		
 		// 16 -> 8
-		targetBuff[i] = _mm_packus_epi16(p0, p1);
+		_mm_stream_si128(targetBuff+i, _mm_packus_epi16(p0, p1));
 	}
 }
 
@@ -2126,7 +2483,7 @@ void StoreToTarget(
 		__m128i p1 = _mm_mulhi_epu16(tmpBuff[i*2+1], hvTargetSrcRatio);
 		
 		// 16 -> 8
-		targetBuff[i] = _mm_packus_epi16(p0, p1);
+		_mm_stream_si128(targetBuff+i, _mm_packus_epi16(p0, p1));
 	}
 }
 
