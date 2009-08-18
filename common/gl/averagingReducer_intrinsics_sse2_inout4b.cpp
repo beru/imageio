@@ -956,6 +956,7 @@ public:
 			}
 			// body
 			{
+				__m128i src = load_unaligned_128(pSrc);
 				const uint16_t limit = targetRatio - 2;
 				const uint16_t loopCount = limit >> 1;
 				const uint16_t* pIntBodyCounts = (const uint16_t*) pBodyCounts_;
@@ -969,10 +970,11 @@ public:
 					switch (bodyCountPair) {
 					case 0:
 						{
-							__m128i src = _mm_unpacklo_epi8(_mm_loadl_epi64(pSrc), _mm_setzero_si128());
 							OffsetPtr(pSrc, 8);
-							__m128i multiplied = _mm_mulhi_epu16(src, ratios);
-							__m128i subtracted = _mm_sub_epi16(src, multiplied);
+							__m128i nextHalf = _mm_loadl_epi64((const __m128i*)((char*)pSrc+8));
+							__m128i wrk = _mm_unpacklo_epi8(src, _mm_setzero_si128());
+							__m128i multiplied = _mm_mulhi_epu16(wrk, ratios);
+							__m128i subtracted = _mm_sub_epi16(wrk, multiplied);
 							__m128i colFirst = _mm_add_epi16(col2, multiplied);
 							_mm_storel_epi64(pTmp, T::work(tmpBase, colFirst));
 							OffsetPtr(pTmp, 8);
@@ -980,14 +982,15 @@ public:
 							_mm_storel_epi64(pTmp, T::work(_mm_srli_si128(tmpBase, 8), colSecond));
 							OffsetPtr(pTmp, 8);
 							col2 = _mm_srli_si128(subtracted, 8);
+							src = _mm_unpacklo_epi64(_mm_srli_si128(src, 8), nextHalf);
 						}
 						break;
 					case 1:
 						{
-							__m128i src = load_unaligned_128(pSrc);
 							OffsetPtr(pSrc, 12);
 							__m128i collected = _mm_unpacklo_epi8(src, _mm_setzero_si128());
-							__m128i remain = _mm_unpacklo_epi8(_mm_srli_si128(src,4), _mm_setzero_si128());
+							__m128i remain = _mm_unpacklo_epi8(_mm_srli_si128(src, 4), _mm_setzero_si128());
+							src = load_unaligned_128(pSrc);
 							__m128i multiplied = _mm_mulhi_epu16(remain, ratios);	// col2 * tail/target
 							__m128i subtracted = _mm_sub_epi16(remain, multiplied);
 							__m128i col = _mm_add_epi16(col2, collected);
@@ -1002,9 +1005,9 @@ public:
 						break;
 					case 0x100:
 						{
-							__m128i src = load_unaligned_128(pSrc);
 							OffsetPtr(pSrc, 12);
 							__m128i shuffled = _mm_shuffle_epi32(src, _MM_SHUFFLE(2,0,1,1));
+							src = load_unaligned_128(pSrc);
 							__m128i collecteds = _mm_unpacklo_epi8(shuffled, _mm_setzero_si128());
 							__m128i nexts = _mm_unpackhi_epi8(shuffled, _mm_setzero_si128());
 							__m128i multiplied = _mm_mulhi_epu16(nexts, ratios);	// col2 * tail/target
@@ -1021,9 +1024,9 @@ public:
 						break;
 					case 0x101:
 						{
-							__m128i src = load_unaligned_128(pSrc);
 							++pSrc;
 							__m128i shuffled = _mm_shuffle_epi32(src, _MM_SHUFFLE(3,1,2,0));
+							src = load_unaligned_128(pSrc);
 							__m128i collecteds = _mm_unpacklo_epi8(shuffled, _mm_setzero_si128());
 							__m128i nexts = _mm_unpackhi_epi8(shuffled, _mm_setzero_si128());
 							__m128i multiplied = _mm_mulhi_epu16(nexts, ratios);	// col2 * tail/target
@@ -1045,7 +1048,7 @@ public:
 				if (limit & 1) {
 					const uint8_t bodyCount = pBodyCounts_[limit-1];
 					__m128i col = col2; // head
-					col2 = _mm_unpacklo_epi8(_mm_loadl_epi64(pSrc), _mm_setzero_si128());
+					col2 = _mm_unpacklo_epi8(src, _mm_setzero_si128());
 					if (bodyCount) {
 						col = _mm_add_epi16(col, col2);
 						col2 = _mm_srli_si128(col2, 8);
