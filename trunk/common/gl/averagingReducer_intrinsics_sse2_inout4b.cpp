@@ -85,7 +85,7 @@ public:
 // 横2加算 8bits -> 16bits
 // in	128bits * 1
 // out	128bits * 1
-__forceinline __m128i Scale2(const __m128i* pSrc)
+__forceinline __m128i Scale2(__m128i src)
 {
 /*
 	12345678abcdefgh
@@ -96,8 +96,7 @@ __forceinline __m128i Scale2(const __m128i* pSrc)
 	        +
 	 5 6 7 8 e f g h
 */
-	__m128i fourPixels0 = pSrc[0];
-	__m128i shuffled0 = _mm_shuffle_epi32(fourPixels0, _MM_SHUFFLE(3, 1, 2, 0));
+	__m128i shuffled0 = _mm_shuffle_epi32(src, _MM_SHUFFLE(3, 1, 2, 0));
 	__m128i twoPixels00 = _mm_unpacklo_epi8(shuffled0, _mm_setzero_si128());
 	__m128i twoPixels01 = _mm_unpackhi_epi8(shuffled0, _mm_setzero_si128());
 	__m128i result0 = _mm_add_epi16(twoPixels00, twoPixels01);
@@ -957,6 +956,7 @@ public:
 			// body
 			{
 				__m128i src = load_unaligned_128(pSrc);
+//				_mm_prefetch((const char*)(pSrc+10), _MM_HINT_NTA);
 				const uint16_t limit = targetRatio - 2;
 				const uint16_t loopCount = limit >> 1;
 				const uint16_t* pIntBodyCounts = (const uint16_t*) pBodyCounts_;
@@ -1404,7 +1404,7 @@ public:
 						_mm_storel_epi64(pTmp, T::work(tmpBase, colThird));
 						OffsetPtr(pTmp, 8);
 						
-						col2 = _mm_srli_si128(db_subtracted, 8);
+						col2 = db_subtracted;
 					}
 				}else { // 0
 					__m128i tmpBase = _mm_loadl_epi64(pTmp);
@@ -1858,13 +1858,19 @@ public:
 				const uint16_t loopRemain = srcWidth % 4;
 				const uint16_t remainLoopCount = loopRemain / 2;
 				const uint16_t remainRemain = loopRemain % 2;
+				__m128i tmp = *pTmp;
+				__m128i src = *pSrc;
 				for (uint16_t i=0; i<loopCount; ++i) {
-					*pTmp = T::work(*pTmp, Scale2(pSrc));
+					__m128i nSrc = *(pSrc+1);
+					__m128i nTmp = *(pTmp+1);
+					*pTmp = T::work(tmp, Scale2(src));
+					src = nSrc;
+					tmp = nTmp;
 					++pSrc;
 					++pTmp;
 				}
 				for (uint16_t i=0; i<remainLoopCount; ++i) {
-					_mm_storel_epi64(pTmp, T::work(_mm_loadl_epi64(pTmp), Split_2_0(_mm_loadl_epi64(pSrc))));
+					_mm_storel_epi64(pTmp, T::work(tmp, Split_2_0(src)));
 					OffsetPtr(pSrc, 8);
 					OffsetPtr(pTmp, 8);
 				}
