@@ -2,6 +2,7 @@
 
 //#include <tmmintrin.h>
 #include <emmintrin.h>
+//#include <smmintrin.h>
 //#include <intrin.h>
 
 namespace gl
