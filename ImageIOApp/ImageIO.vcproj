@@ -752,6 +752,30 @@
 					>
 				</File>
 				<File
+					RelativePath="..\common\gl\averagingReducer_intrinsics_ssse3_inout3b.cpp"
+					>
+					<FileConfiguration
+						Name="Debug|x64"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							UsePrecompiledHeader="0"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|x64"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							UsePrecompiledHeader="0"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath="..\common\gl\averagingReducer_intrinsics_ssse3_inout3b.h"
+					>
+				</File>
+				<File
 					RelativePath="..\common\gl\binary.h"
 					>
 				</File>
