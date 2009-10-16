@@ -16,7 +16,6 @@ reference
 Visual C++ Language Reference Compiler Intrinsics
 http://msdn.microsoft.com/ja-jp/library/26td21ds.aspx
 http://msdn.microsoft.com/ja-jp/library/x8zs5twb.aspx
-http://www.icnet.ne.jp/~nsystem/simd_tobira/index.html
 
 */
 
