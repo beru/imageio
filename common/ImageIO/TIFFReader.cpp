@@ -34,6 +34,20 @@ void InvertSamples(char* buff, size_t bps, size_t spp, size_t width)
 	}
 }
 
+// TODO: x64対応
+unsigned int ConvertEndian(unsigned int val)
+{
+#ifdef _M_IX86
+    __asm {
+      mov eax, val
+      bswap eax
+      mov val, eax
+    }
+#else
+#endif
+    return val;
+}
+
 unsigned long ConvertEndian(unsigned long val)
 {
 #ifdef _M_IX86

@@ -8,6 +8,7 @@ struct jpeg_decompress_struct;
 struct tiff;
 struct png_struct_def;
 struct png_info_struct;
+typedef struct png_info_def png_info;
 
 namespace ImageIO {
 
@@ -35,7 +36,7 @@ protected:
 	virtual bool ReadSourceInformation(const BITMAPINFOHEADER& bmih, const RGBQUAD* bmiColors);
 	virtual bool ReadSourceInformation(jpeg_decompress_struct& jd);
 	virtual bool ReadSourceInformation(tiff* ptiff);
-	virtual bool ReadSourceInformation(png_struct_def* pPNG, png_info_struct* pINFO);
+	virtual bool ReadSourceInformation(png_struct_def* pPNG, png_info* pINFO);
 	ImageInfo imageInfo_;
 	
 	virtual bool Setup() = 0;

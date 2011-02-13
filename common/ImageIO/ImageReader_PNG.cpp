@@ -41,7 +41,7 @@ bool sys_is_little_endian(){
 
 // http://libpng.org/pub/png/pngsuite.html
 // http://dencha.ojaru.jp/programs_07/pg_graphic_10_libpng_txt.html
-bool ImageReader::ReadSourceInformation(png_struct_def* pPNG, png_info_struct* pINFO)
+bool ImageReader::ReadSourceInformation(png_struct_def* pPNG, png_info* pINFO)
 {
 	png_uint_32 width, height;
 	int bit_depth, color_type, interlace_method;
@@ -60,7 +60,7 @@ bool ImageReader::ReadSourceInformation(png_struct_def* pPNG, png_info_struct* p
 	case PNG_COLOR_TYPE_GRAY:
 		isGrayscale = true;
 		if (bit_depth < 8) {
-			png_set_gray_1_2_4_to_8(pPNG);
+			png_set_expand_gray_1_2_4_to_8(pPNG);
 		}
 		break;
 	case PNG_COLOR_TYPE_RGB_ALPHA:
