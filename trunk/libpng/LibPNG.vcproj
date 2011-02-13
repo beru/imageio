@@ -349,10 +349,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\pnggccrd.c"
-				>
-			</File>
-			<File
 				RelativePath=".\pngget.c"
 				>
 			</File>
@@ -385,15 +381,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\pngtest.c"
-				>
-			</File>
-			<File
 				RelativePath=".\pngtrans.c"
-				>
-			</File>
-			<File
-				RelativePath=".\pngvcrd.c"
 				>
 			</File>
 			<File
@@ -423,6 +411,22 @@
 			</File>
 			<File
 				RelativePath=".\pngconf.h"
+				>
+			</File>
+			<File
+				RelativePath=".\pngdebug.h"
+				>
+			</File>
+			<File
+				RelativePath=".\pnginfo.h"
+				>
+			</File>
+			<File
+				RelativePath=".\pngpriv.h"
+				>
+			</File>
+			<File
+				RelativePath=".\pngstruct.h"
 				>
 			</File>
 		</Filter>

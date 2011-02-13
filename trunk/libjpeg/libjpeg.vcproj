@@ -277,6 +277,22 @@
 				>
 			</File>
 			<File
+				RelativePath=".\cjpeg.c"
+				>
+			</File>
+			<File
+				RelativePath=".\ckconfig.c"
+				>
+			</File>
+			<File
+				RelativePath=".\djpeg.c"
+				>
+			</File>
+			<File
+				RelativePath=".\example.c"
+				>
+			</File>
+			<File
 				RelativePath=".\jaricom.c"
 				>
 			</File>
@@ -441,6 +457,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\jmemansi.c"
+				>
+			</File>
+			<File
 				RelativePath=".\jmemmgr.c"
 				>
 			</File>
@@ -502,6 +522,10 @@
 			</File>
 			<File
 				RelativePath=".\wrgif.c"
+				>
+			</File>
+			<File
+				RelativePath=".\wrjpgcom.c"
 				>
 			</File>
 			<File
