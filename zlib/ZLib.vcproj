@@ -353,10 +353,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\example.c"
-				>
-			</File>
-			<File
 				RelativePath=".\gzclose.c"
 				>
 			</File>
