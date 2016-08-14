@@ -4,6 +4,7 @@
 
 #include "common.h"
 #include "arrayutil.h"
+#include <algorithm>
 
 #ifdef _DEBUG
 #include <tchar.h>

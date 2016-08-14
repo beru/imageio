@@ -6,6 +6,7 @@
 #include <memory.h>
 #include <stdio.h>
 
+#define NOMINMAX
 #include <windows.h>
 
 File::File(HANDLE hFile)

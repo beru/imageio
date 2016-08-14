@@ -49,7 +49,7 @@ void CMainFrame::ReadFile(LPCTSTR filePath)
 void CMainFrame::OnViewRender(size_t xRatioTarget, size_t xRatioSource, size_t yRatioTarget, size_t yRatioSource, DWORD elapsed)
 {
 	TCHAR buff[128] = {0};
-	_stprintf(buff, _T("x:%5d/%5d y:%5d/%5d  %d msec elapsed"), xRatioTarget, xRatioSource, yRatioTarget, yRatioSource, elapsed);
+	_stprintf(buff, _T("x:%5d/%5d y:%5d/%5d  %d micro-seconds elapsed"), xRatioTarget, xRatioSource, yRatioTarget, yRatioSource, elapsed);
 //	_stprintf(buff, "%d msec elapsed", elapsed);
 	m_sBar.SetText(1, buff);
 }

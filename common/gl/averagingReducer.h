@@ -350,7 +350,7 @@ public:
 		numOfFullDots( (ratioTarget * (srcWidth % ratioSource /* remainSrcWidth */)) / ratioSource ),
 		imcompleteDotSamples( (ratioTarget * (srcWidth % ratioSource /* remainSrcWidth */)) % ratioSource )
 	{
-		const size_t collectParametersCnt = max( (int(ratioTarget) - 2), (int(numOfFullDots)-1) ) + 1;
+		const size_t collectParametersCnt = std::max( (int(ratioTarget) - 2), (int(numOfFullDots)-1) ) + 1;
 		assert(collectParametersCnt < 4096);
 		size_t bodyBodyIteCnt = ratioFirstBodyBodyIteCnt;
 		size_t ratioTail = ratioFirstBodyTail;
@@ -457,7 +457,7 @@ public:
 		}
 		if (imcompleteDotSamples) {
 			// last tail
-			const size_t headSampleCount = (imcompleteDotSamples < ratioHead) ?  min(ratioRemainder, imcompleteDotSamples) : ratioHead;
+			const size_t headSampleCount = (imcompleteDotSamples < ratioHead) ? std::min(ratioRemainder, imcompleteDotSamples) : ratioHead;
 			const size_t samplesLeft = imcompleteDotSamples - ratioHead;
 			const size_t bodyIteCnt = samplesLeft / ratioTarget;
 			effector(

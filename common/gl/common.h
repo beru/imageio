@@ -11,9 +11,6 @@
 
 #include "fastmath.h"
 
-#undef min
-#undef max
-
 #include <numeric>
 
 #ifdef DEBUG
@@ -298,36 +295,6 @@ inline T div2(T p)
 
 // http://www.hayasoft.com/haya/bit-enzan/technic.html
 
-template <typename T>
-__forceinline T min(T a, T b)
-{
-	return std::min(a, b);
-}
-
-template <typename T>
-T max(T a, T b)
-{
-	return std::max(a, b);
-}
-
-template <typename T>
-T max(T a, T b, T c)
-{
-	return std::max(std::max(a, b), c);
-}
-
-template <typename T>
-T min(T a, T b, T c)
-{
-	return std::min(std::min(a, b), c);
-}
-
-inline int max(int a, int b)
-{
-	const int t = (a-b);
-	return a - (t & (t >> 31));
-}
-
 /*
 // http://aggregate.org/MAGIC/#Integer%20Minimum%20or%20Maximum
 inline unsigned int min(unsigned int x, unsigned int y)
@@ -340,12 +307,6 @@ inline unsigned int max(unsigned int x, unsigned int y)
 	return x-(((x-y)>>(sizeof(unsigned int)*4-1))&(x-y));
 }
 */
-
-inline int min(int a, int b)
-{
-	const int t = (a-b);
-	return b + (t & (t >> 31));
-}
 
 template <typename T>
 inline T abs(T val)

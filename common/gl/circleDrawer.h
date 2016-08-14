@@ -4,9 +4,7 @@
 	円描画処理
 */
 
-#include "glbuffer2d.h"
-
-#include "Timer.h"
+#include "buffer2d.h"
 
 double elapsed;
 
@@ -144,7 +142,7 @@ public:
 		}
 	}
 	
-	Buffer2D<ColorT>*	pBuff_;
+	Buffer2D<ColorT>* pBuff_;
 	ColorBlenderT* pBlender_;
 
 };

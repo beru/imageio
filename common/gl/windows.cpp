@@ -1,3 +1,5 @@
+
+#define NOMINMAX
 #include "windows.h"
 #include "buffer2d.h"
 

@@ -25,6 +25,7 @@
 #include "gl/Buffer2D.h"
 
 #include "ThreadPool.h"
+#include "Timer.h"
 
 static const size_t MAX_IMAGE_WIDTH = 16384 + 16;
 static const size_t MAX_IMAGE_HEIGHT = 16384;
@@ -111,7 +112,6 @@ bool CImageView::ReadImage(LPCTSTR filePath)
 	
 	reader.pImage_ = &m_dib;
 
-Timer t;
 //	io.progressDelegate_ = m_readProgressDelegate;
 	if (!reader.Read(filePath)) {
 		std::string errmsg = reader.GetLastErrorMessage();
@@ -119,9 +119,6 @@ Timer t;
 		m_pSrc = boost::shared_ptr<gl::IBuffer2D>();
 		return false;
 	}
-TCHAR buff[64];
-_stprintf(buff, _T("%d\n"), t.Elapsed());
-OutputDebugString(buff);
 
 	m_orgImageWidth = reader.GetImageInfo().width;
 	m_pSrc = boost::shared_ptr<gl::IBuffer2D>(gl::BuildBuffer2DFromBMP(m_dib.bmih_, m_dib.pBits_));
@@ -356,7 +353,7 @@ bool CImageView::render(CSize sz)
 		void* pTarget = m_pTarget->GetPixelVoidPtr(0,0);
 		char* pTmp = m_tmpBuffs[0];
 		
-		DWORD startTime = timeGetTime();
+        Timer t;
 		switch (m_resamplingFilterType) {
 		case ResamplingFilterType_NearestNeighbor:
 			gl::ResampleImage<fixed8uint>(
@@ -433,7 +430,7 @@ bool CImageView::render(CSize sz)
 			break;
 		}
 
-		m_renderReportDelegate(widthRatioTarget, widthRatioSource, heightRatioTarget, heightRatioSource, timeGetTime()-startTime);
+		m_renderReportDelegate(widthRatioTarget, widthRatioSource, heightRatioTarget, heightRatioSource, t.ElapsedSecond() * 1000 * 1000);
 	}
 
 	// 縮小比率が変わらなくても、窓の大きさは変わる事があるので。

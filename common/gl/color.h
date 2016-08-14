@@ -6,10 +6,7 @@
 */
 
 #include <memory.h>
-#define NOMINMAX
 #include <limits>
-#undef min
-#undef max
 
 #include "common.h"
 
