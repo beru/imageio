@@ -1,0 +1,23 @@
+*** D:/libs/jpeg-9b/jmorecfg.h	Tue Sep 17 18:20:20 2013
+--- D:/projects/imageio/libjpeg/jmorecfg.h	Mon Aug 15 16:52:30 2016
+***************
+*** 394,402 ****
+   *    can't use color quantization if you change that value.
+   */
+  
+! #define RGB_RED		0	/* Offset of Red in an RGB scanline element */
+  #define RGB_GREEN	1	/* Offset of Green */
+! #define RGB_BLUE	2	/* Offset of Blue */
+  #define RGB_PIXELSIZE	3	/* JSAMPLEs per RGB scanline element */
+  
+  
+--- 394,402 ----
+   *    can't use color quantization if you change that value.
+   */
+  
+! #define RGB_RED		2	/* Offset of Red in an RGB scanline element */
+  #define RGB_GREEN	1	/* Offset of Green */
+! #define RGB_BLUE	0	/* Offset of Blue */
+  #define RGB_PIXELSIZE	3	/* JSAMPLEs per RGB scanline element */
+  
+  

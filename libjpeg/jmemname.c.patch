@@ -1,0 +1,30 @@
+*** D:/libs/jpeg-9b/jmemname.c	Mon Sep 15 03:35:10 1997
+--- D:/projects/imageio/libjpeg/jmemname.c	Tue Aug 16 01:32:23 2016
+***************
+*** 39,44 ****
+--- 39,47 ----
+  #endif
+  #endif
+  
++ #ifdef _WIN32
++ #include <Windows.h>
++ #endif
+  
+  /*
+   * Selection of a file name for a temporary file.
+***************
+*** 126,132 ****
+--- 129,141 ----
+  select_file_name (char * fname)
+  {
+    next_file_num++;		/* advance counter */
++ #ifdef _WIN32
++   TCHAR buff[MAX_PATH];
++   GetTempPath(MAX_PATH, buff);
++   sprintf(fname, TEMP_FILE_NAME, buff, next_file_num);
++ #else
+    sprintf(fname, TEMP_FILE_NAME, TEMP_DIRECTORY, next_file_num);
++ #endif
+    mktemp(fname);		/* make sure file name is unique */
+    /* mktemp replaces the trailing XXXXXX with a unique string of characters */
+  }
