@@ -30,8 +30,8 @@ private:
 	CDC m_memDC;
 	
 	size_t m_orgImageWidth;
-	boost::shared_ptr<gl::IBuffer2D> m_pSrc;
-	boost::shared_ptr<gl::IBuffer2D> m_pTarget;
+	std::shared_ptr<gl::IBuffer2D> m_pSrc;
+	std::shared_ptr<gl::IBuffer2D> m_pTarget;
 	
 	size_t m_lastWidthRatioTarget;
 	size_t m_lastHeightRatioTarget;

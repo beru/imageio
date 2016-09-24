@@ -19,7 +19,7 @@ public:
 	CMainFrame();
 	~CMainFrame();
 	
-	boost::shared_ptr<CImageView> m_pImageView;
+	std::shared_ptr<CImageView> m_pImageView;
 	
 	CCommandBarCtrl m_CmdBar;
     CMPSBarWithProgress m_sBar;

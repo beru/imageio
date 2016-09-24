@@ -79,7 +79,7 @@ LRESULT CImageView::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	
 	m_hBMP = CreateDIB(width, height, 32, m_lineOffset, m_bmi, m_pBits);
 	m_memDC.SelectBitmap(m_hBMP);
-	m_pTarget = boost::shared_ptr<gl::IBuffer2D>(gl::BuildBuffer2DFromBMP(m_bmi.bmiHeader, m_pBits));
+	m_pTarget = std::shared_ptr<gl::IBuffer2D>(gl::BuildBuffer2DFromBMP(m_bmi.bmiHeader, m_pBits));
 
 	void* pVoid = m_pTarget->GetPixelVoidPtr(0,0);
 	return 0;
@@ -116,12 +116,12 @@ bool CImageView::ReadImage(LPCTSTR filePath)
 	if (!reader.Read(filePath)) {
 		std::string errmsg = reader.GetLastErrorMessage();
 		MessageBox(ConvertToTString(errmsg).c_str(), _T("error"));
-		m_pSrc = boost::shared_ptr<gl::IBuffer2D>();
+		m_pSrc = std::shared_ptr<gl::IBuffer2D>();
 		return false;
 	}
 
 	m_orgImageWidth = reader.GetImageInfo().width;
-	m_pSrc = boost::shared_ptr<gl::IBuffer2D>(gl::BuildBuffer2DFromBMP(m_dib.bmih_, m_dib.pBits_));
+	m_pSrc = std::shared_ptr<gl::IBuffer2D>(gl::BuildBuffer2DFromBMP(m_dib.bmih_, m_dib.pBits_));
 	
 	gl::Buffer2D<TargetColor>* pTarget = (gl::Buffer2D<TargetColor>*) m_pTarget.get();
 	gl::Buffer2D_Fill(*pTarget, TargetColor(0));

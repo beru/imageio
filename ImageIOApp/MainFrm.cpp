@@ -14,7 +14,7 @@ static CFileVersionInfo g_verInfo;
 
 CMainFrame::CMainFrame()
 {
-	m_pImageView = boost::shared_ptr<CImageView>(new CImageView());
+	m_pImageView = std::shared_ptr<CImageView>(new CImageView());
 }
 
 CMainFrame::~CMainFrame()
@@ -49,7 +49,7 @@ void CMainFrame::ReadFile(LPCTSTR filePath)
 void CMainFrame::OnViewRender(size_t xRatioTarget, size_t xRatioSource, size_t yRatioTarget, size_t yRatioSource, DWORD elapsed)
 {
 	TCHAR buff[128] = {0};
-	_stprintf(buff, _T("x:%5d/%5d y:%5d/%5d  %d micro-seconds elapsed"), xRatioTarget, xRatioSource, yRatioTarget, yRatioSource, elapsed);
+	_stprintf(buff, _T("x:%5zu/%5zu y:%5zu/%5zu  %d micro-seconds elapsed"), xRatioTarget, xRatioSource, yRatioTarget, yRatioSource, elapsed);
 //	_stprintf(buff, "%d msec elapsed", elapsed);
 	m_sBar.SetText(1, buff);
 }
@@ -57,7 +57,7 @@ void CMainFrame::OnViewRender(size_t xRatioTarget, size_t xRatioSource, size_t y
 bool CMainFrame::OnReadProgress(size_t lineStart, size_t lineEnd)
 {
 	TCHAR buff[128] = {0};
-	_stprintf(buff, _T("%d,%d"), lineStart, lineEnd);
+	_stprintf(buff, _T("%zd,%zd"), lineStart, lineEnd);
 	m_sBar.SetText(2, buff);
 	
 	return true;

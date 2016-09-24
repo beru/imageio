@@ -43,7 +43,7 @@ protected:
 	bool bNeedToProcess_;
 	std::vector<char> buff_;
 	
-	boost::shared_ptr<class ILineColorConverter> pLineColorConverter_;
+	std::shared_ptr<class ILineColorConverter> pLineColorConverter_;
 };
 
 } // namespace ImageIO

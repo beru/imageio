@@ -13,9 +13,9 @@
 
 #include "xs_Float.h"
 
-#include <boost/static_assert.hpp>
-#include <boost/integer_traits.hpp>
-
+#include <memory>
+#include <type_traits>
+#include <limits>
 
 namespace gl
 {
@@ -106,7 +106,7 @@ public:
 
 	fixed(double v)
 		:
-	value( std::min<double>(v * (1i64 << shifts), boost::integer_traits<T>::const_max) )
+		value( std::min<T>(T(v * (1i64 << shifts) + 0.5), std::numeric_limits<T>::max()) )
 //		value( xs_Fix<shifts>::ToFix(v) )
 	{
 	}
@@ -173,7 +173,7 @@ public:
 	template <int rshifts, typename T2>
 	__forceinline fixed& operator /= (fixed<rshifts,T2> v)
 	{
-		BOOST_STATIC_ASSERT(sizeof(int) <= sizeof(T2));
+		static_assert(sizeof(int) <= sizeof(T2), "forgot the reason");
 		value = divShift<rshifts>(value, v.value);
 		return *this;
 	}

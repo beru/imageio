@@ -47,7 +47,7 @@ extern CAppModule _Module;
 #include "Timer.h"
 #include <assert.h>
 
-#include <boost/shared_ptr.hpp>
+#include <memory>
 #include "fastdelegate.h"
 
 #include <vector>

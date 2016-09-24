@@ -2,8 +2,8 @@
 
 #include "File.h"
 
-#include <boost/static_assert.hpp>
-#include <boost/shared_ptr.hpp>
+#include <type_traits>
+#include <memory>
 
 #include "PathUtility.h"
 

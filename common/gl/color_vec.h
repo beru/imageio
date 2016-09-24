@@ -11,9 +11,9 @@ namespace gl
 {
 
 template<int shifts>
-struct Color4 < ColorBGRA <fixed<shifts, boost::uint32_t> > > : ColorBGRA <fixed<shifts, boost::uint32_t> >
+struct Color4 < ColorBGRA <fixed<shifts, uint32_t> > > : ColorBGRA <fixed<shifts, boost::uint32_t> >
 {
-	typedef typename ColorBGRA <fixed<shifts, boost::uint32_t> >::value_type T;
+	typedef typename ColorBGRA <fixed<shifts, uint32_t> >::value_type T;
 
 	Color4(T v=OneMinusEpsilon(T(1)), T alpha = OneMinusEpsilon(T(1)))
 	{

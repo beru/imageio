@@ -96,7 +96,7 @@ bool DIBSectionReader::Setup()
 		|| imageInfo_.bitsPerPixel != targetImageInfo.bitsPerPixel
 	);
 	
-	pLineColorConverter_ = boost::shared_ptr<ILineColorConverter>(CreateLineColorConverter(imageInfo_, targetImageInfo, lastErrorMessage_));
+	pLineColorConverter_ = std::shared_ptr<ILineColorConverter>(CreateLineColorConverter(imageInfo_, targetImageInfo, lastErrorMessage_));
 	if (!pLineColorConverter_) {
 		lastErrorMessage_ = "cannot create line color converter. " + lastErrorMessage_;
 		return false;

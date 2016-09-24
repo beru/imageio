@@ -1,5 +1,6 @@
 #include "stdafx.h"
 
+#include <algorithm>
 #include "LineColorConverter.h"
 
 #include "gl/color.h"
