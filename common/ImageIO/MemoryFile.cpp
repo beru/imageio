@@ -1,6 +1,8 @@
 #include "stdafx.h"
 #include "MemoryFile.h"
 
+#include <assert.h>
+
 MemoryFile::MemoryFile(void* pBuff, size_t buffSize)
 	:
 	pBuff_(pBuff),

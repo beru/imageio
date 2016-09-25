@@ -6,6 +6,7 @@
 #include "arrayutil.h"
 
 #include <vector>
+#include <algorithm>
 
 __forceinline char SwapByteBits(char c)
 {

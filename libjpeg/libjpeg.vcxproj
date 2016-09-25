@@ -89,8 +89,9 @@
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
     </ClCompile>
+    <Lib />
     <Lib>
-      <OutputFile>..\lib\x86\$(ProjectName)D.lib</OutputFile>
+      <LinkTimeCodeGeneration>true</LinkTimeCodeGeneration>
     </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -106,8 +107,9 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <ForcedIncludeFiles>jconfig.h;%(ForcedIncludeFiles)</ForcedIncludeFiles>
     </ClCompile>
+    <Lib />
     <Lib>
-      <OutputFile>..\lib\x64\$(ProjectName)D.lib</OutputFile>
+      <LinkTimeCodeGeneration>true</LinkTimeCodeGeneration>
     </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -120,9 +122,7 @@
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
-    <Lib>
-      <OutputFile>..\lib\x86\$(ProjectName).lib</OutputFile>
-    </Lib>
+    <Lib />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <Midl>
@@ -136,16 +136,9 @@
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
-    <Lib>
-      <OutputFile>..\lib\x64\$(ProjectName).lib</OutputFile>
-    </Lib>
+    <Lib />
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="cdjpeg.c" />
-    <ClCompile Include="cjpeg.c" />
-    <ClCompile Include="ckconfig.c" />
-    <ClCompile Include="djpeg.c" />
-    <ClCompile Include="example.c" />
     <ClCompile Include="jaricom.c" />
     <ClCompile Include="jcapimin.c" />
     <ClCompile Include="jcapistd.c" />
@@ -196,7 +189,6 @@
     <ClCompile Include="rdbmp.c" />
     <ClCompile Include="rdcolmap.c" />
     <ClCompile Include="rdgif.c" />
-    <ClCompile Include="rdjpgcom.c" />
     <ClCompile Include="rdppm.c" />
     <ClCompile Include="rdrle.c" />
     <ClCompile Include="rdswitch.c" />
@@ -204,14 +196,11 @@
     <ClCompile Include="transupp.c" />
     <ClCompile Include="wrbmp.c" />
     <ClCompile Include="wrgif.c" />
-    <ClCompile Include="wrjpgcom.c" />
     <ClCompile Include="wrppm.c" />
     <ClCompile Include="wrrle.c" />
     <ClCompile Include="wrtarga.c" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="cderror.h" />
-    <ClInclude Include="cdjpeg.h" />
     <ClInclude Include="jconfig.h" />
     <ClInclude Include="jdct.h" />
     <ClInclude Include="jerror.h" />

@@ -38,11 +38,11 @@ double fround(double val, size_t decimal)
 double LimitDecimalPlace(double val, size_t decimalPlace)
 {
 	double factor = pow(10.0, (double)decimalPlace);
-	LONGLONG integralPart = LONGLONG(LONGLONG(val) * factor);
-	LONGLONG allPart = LONGLONG(val * factor);
-	LONGLONG fractionalPart = allPart - integralPart;
+	long long integralPart = long long((long long)(val) * factor);
+	long long allPart = long long(val * factor);
+	long long fractionalPart = allPart - integralPart;
 
-	double integral = double(LONGLONG(val));
+	double integral = double((long long)(val));
 	double fractional = (fractionalPart / factor);
 	return integral + fractional;
 }

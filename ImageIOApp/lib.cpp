@@ -1,4 +1,3 @@
-#include "stdafx.h"
 
 #pragma comment(lib, "Gdi32.lib")
 #pragma comment(lib, "winmm.lib")

@@ -79,8 +79,8 @@ private:
 	};
 
 public:
-	static const T intFlag = (0xFFFFFFFFFFFFFFFF >> shifts) << shifts;
-	static const T fracFlag = 0xFFFFFFFFFFFFFFFF ^ intFlag;
+	static const T intFlag = (0xFFFFFFFFFFFFFFFFui64 >> shifts) << shifts;
+	static const T fracFlag = 0xFFFFFFFFFFFFFFFFui64 ^ intFlag;
 
 	typedef T value_type;
 	static const int shifts = shifts;
